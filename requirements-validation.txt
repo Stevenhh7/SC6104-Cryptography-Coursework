@@ -1,0 +1,4 @@
+# Optional: exact versions used for the accelerated and OAEP integration checks.
+# The scanner and its core tests also work without these packages.
+gmpy2==2.3.2
+pycryptodome==3.24.0
