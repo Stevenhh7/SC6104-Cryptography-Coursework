@@ -14,6 +14,8 @@
 4. 把 [A/B 接口说明](docs/AB_INTERFACE.md) 发给队友。
 5. 阅读 [实现与验证记录](docs/VALIDATION.md)，了解已经验证的范围。
 
+课堂讲解可直接打开 [三页动画 HTML](presentation/index.html)：共享素因子攻击、乘积树／余数树、去重与全重叠回退。支持离线播放、键盘逐步控制、全屏和中文讲解提示；操作说明见 [presentation/README.md](presentation/README.md)。
+
 ## 快速运行
 
 需要 Python 3.10 或以上。所有命令都在仓库根目录执行。默认后端只使用 Python 标准库，无需安装依赖。
