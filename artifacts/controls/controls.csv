@@ -1,0 +1,11 @@
+﻿case,algorithm,bits,records,unique_moduli,expected_recoverable,correctly_factored,verified_messages,false_positives,false_negatives,passed,public_sha256
+normal,batch,2048,100,100,0,0,0,0,0,True,bf49da0d71707bafa8793d50abd4754de87d5518c041b3ff1804c0a754e66275
+normal,pairwise,2048,100,100,0,0,0,0,0,True,bf49da0d71707bafa8793d50abd4754de87d5518c041b3ff1804c0a754e66275
+duplicates_only,batch,2048,102,100,0,0,0,0,0,True,09ae6736e1011cf7c72742547a8b873fd5cea9d68cfd6016b6edf8531c8d6535
+duplicates_only,pairwise,2048,102,100,0,0,0,0,0,True,09ae6736e1011cf7c72742547a8b873fd5cea9d68cfd6016b6edf8531c8d6535
+isolated_target,batch,2048,1,1,0,0,0,0,0,True,274ef6d15dae7626ba46c47e3b9a068ee91810cb7416acb40d536fe657f27e72
+isolated_target,pairwise,2048,1,1,0,0,0,0,0,True,274ef6d15dae7626ba46c47e3b9a068ee91810cb7416acb40d536fe657f27e72
+shared_prime_demo,batch,2048,102,100,5,5,6,0,0,True,833d8d3e823943b9d9792c9f2695c35a8bcc903c688a0e6f3c7554a1dd434727
+shared_prime_demo,pairwise,2048,102,100,5,5,6,0,0,True,833d8d3e823943b9d9792c9f2695c35a8bcc903c688a0e6f3c7554a1dd434727
+repaired,batch,2048,102,100,0,0,0,0,0,True,5c97b4a7d8e4cab634a311005266de3c24fa6e004d0d8847239e8722d31824f2
+repaired,pairwise,2048,102,100,0,0,0,0,0,True,5c97b4a7d8e4cab634a311005266de3c24fa6e004d0d8847239e8722d31824f2

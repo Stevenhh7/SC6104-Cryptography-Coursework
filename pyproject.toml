@@ -11,9 +11,11 @@ dependencies = []
 
 [project.optional-dependencies]
 fast = ["gmpy2>=2.1"]
+lab = ["pycryptodome>=3.22,<4", "cryptography>=44,<48", "matplotlib>=3.9,<4", "gmpy2>=2.2,<3"]
 
 [project.scripts]
 rsa-audit = "rsa_audit.cli:main"
+rsa-lab = "rsa_lab.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["rsa_audit*"]
+include = ["rsa_audit*", "rsa_lab*"]

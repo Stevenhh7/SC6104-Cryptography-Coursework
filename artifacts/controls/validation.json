@@ -1,0 +1,165 @@
+{
+  "summary": {
+    "bits": 2048,
+    "scan_runs": 10,
+    "oaep_negative_checks": 2,
+    "passed": true
+  },
+  "cases": [
+    {
+      "case": "normal",
+      "algorithm": "batch",
+      "bits": 2048,
+      "records": 100,
+      "unique_moduli": 100,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "bf49da0d71707bafa8793d50abd4754de87d5518c041b3ff1804c0a754e66275"
+    },
+    {
+      "case": "normal",
+      "algorithm": "pairwise",
+      "bits": 2048,
+      "records": 100,
+      "unique_moduli": 100,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "bf49da0d71707bafa8793d50abd4754de87d5518c041b3ff1804c0a754e66275"
+    },
+    {
+      "case": "duplicates_only",
+      "algorithm": "batch",
+      "bits": 2048,
+      "records": 102,
+      "unique_moduli": 100,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "09ae6736e1011cf7c72742547a8b873fd5cea9d68cfd6016b6edf8531c8d6535"
+    },
+    {
+      "case": "duplicates_only",
+      "algorithm": "pairwise",
+      "bits": 2048,
+      "records": 102,
+      "unique_moduli": 100,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "09ae6736e1011cf7c72742547a8b873fd5cea9d68cfd6016b6edf8531c8d6535"
+    },
+    {
+      "case": "isolated_target",
+      "algorithm": "batch",
+      "bits": 2048,
+      "records": 1,
+      "unique_moduli": 1,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "274ef6d15dae7626ba46c47e3b9a068ee91810cb7416acb40d536fe657f27e72"
+    },
+    {
+      "case": "isolated_target",
+      "algorithm": "pairwise",
+      "bits": 2048,
+      "records": 1,
+      "unique_moduli": 1,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "274ef6d15dae7626ba46c47e3b9a068ee91810cb7416acb40d536fe657f27e72"
+    },
+    {
+      "case": "shared_prime_demo",
+      "algorithm": "batch",
+      "bits": 2048,
+      "records": 102,
+      "unique_moduli": 100,
+      "expected_recoverable": 5,
+      "correctly_factored": 5,
+      "verified_messages": 6,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "833d8d3e823943b9d9792c9f2695c35a8bcc903c688a0e6f3c7554a1dd434727"
+    },
+    {
+      "case": "shared_prime_demo",
+      "algorithm": "pairwise",
+      "bits": 2048,
+      "records": 102,
+      "unique_moduli": 100,
+      "expected_recoverable": 5,
+      "correctly_factored": 5,
+      "verified_messages": 6,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "833d8d3e823943b9d9792c9f2695c35a8bcc903c688a0e6f3c7554a1dd434727"
+    },
+    {
+      "case": "repaired",
+      "algorithm": "batch",
+      "bits": 2048,
+      "records": 102,
+      "unique_moduli": 100,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "5c97b4a7d8e4cab634a311005266de3c24fa6e004d0d8847239e8722d31824f2"
+    },
+    {
+      "case": "repaired",
+      "algorithm": "pairwise",
+      "bits": 2048,
+      "records": 102,
+      "unique_moduli": 100,
+      "expected_recoverable": 0,
+      "correctly_factored": 0,
+      "verified_messages": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "passed": true,
+      "public_sha256": "5c97b4a7d8e4cab634a311005266de3c24fa6e004d0d8847239e8722d31824f2"
+    }
+  ],
+  "oaep_checks": [
+    {
+      "case": "wrong_oaep_label",
+      "expected": "invalid_ciphertext",
+      "observed": "invalid_ciphertext",
+      "passed": true
+    },
+    {
+      "case": "corrupted_ciphertext",
+      "expected": "invalid_ciphertext",
+      "observed": "invalid_ciphertext",
+      "passed": true
+    }
+  ],
+  "repair_legitimate_roundtrips": 6
+}

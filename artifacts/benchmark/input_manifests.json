@@ -1,0 +1,78 @@
+{
+  "n-100": {
+    "schema_version": 1,
+    "config": {
+      "count": 100,
+      "bits": 2048,
+      "mode": "pairs",
+      "weak_fraction": 0.05,
+      "source_corpus": "../corpus",
+      "source_generation_seconds": 124.18567679999978
+    },
+    "record_count": 100,
+    "unique_moduli": 100,
+    "actual_vulnerable_moduli": 6,
+    "actual_weak_fraction": 0.06,
+    "generation_seconds": 0.0,
+    "public_sha256": "4392770bf23043784248fe51be4e6e4c180fef9ddb3960f7f9b163bd96352575",
+    "ciphertexts_sha256": "1acd4b9433d3c1bcaa8c56f25e2aab14700425d89dd620f0cd35e03f8b015b32",
+    "randomness": "OpenSSL CSPRNG; seed controls pool choices only; replay saved data"
+  },
+  "n-300": {
+    "schema_version": 1,
+    "config": {
+      "count": 300,
+      "bits": 2048,
+      "mode": "pairs",
+      "weak_fraction": 0.05,
+      "source_corpus": "../corpus",
+      "source_generation_seconds": 124.18567679999978
+    },
+    "record_count": 300,
+    "unique_moduli": 300,
+    "actual_vulnerable_moduli": 16,
+    "actual_weak_fraction": 0.05333333333333334,
+    "generation_seconds": 0.0,
+    "public_sha256": "6f609c2b6b220dce4a2442d702a14087cfa1746664e7c85171fd982209707a54",
+    "ciphertexts_sha256": "18735a50bcddec6767880fa4b5f7115463b128ea08c04e49a9798f189c7eadd8",
+    "randomness": "OpenSSL CSPRNG; seed controls pool choices only; replay saved data"
+  },
+  "n-1000": {
+    "schema_version": 1,
+    "config": {
+      "count": 1000,
+      "bits": 2048,
+      "mode": "pairs",
+      "weak_fraction": 0.05,
+      "source_corpus": "../corpus",
+      "source_generation_seconds": 124.18567679999978
+    },
+    "record_count": 1000,
+    "unique_moduli": 1000,
+    "actual_vulnerable_moduli": 50,
+    "actual_weak_fraction": 0.05,
+    "generation_seconds": 0.0,
+    "public_sha256": "ff3849cc99ccc4698a5ffbef5c31133f07eda0a5a17ac953d15592cae6822a88",
+    "ciphertexts_sha256": "3d431a0b9603eb24fdf12c896d422126199eaec92a71e931f51aa1919593f2e8",
+    "randomness": "OpenSSL CSPRNG; seed controls pool choices only; replay saved data"
+  },
+  "n-3000": {
+    "schema_version": 1,
+    "config": {
+      "count": 3000,
+      "bits": 2048,
+      "mode": "pairs",
+      "weak_fraction": 0.05,
+      "source_corpus": "../corpus",
+      "source_generation_seconds": 124.18567679999978
+    },
+    "record_count": 3000,
+    "unique_moduli": 3000,
+    "actual_vulnerable_moduli": 150,
+    "actual_weak_fraction": 0.05,
+    "generation_seconds": 0.0,
+    "public_sha256": "c42ce85c586f4d1defe339e05e8963711ea5c6ea789c88ee2b3ec738a3fc0594",
+    "ciphertexts_sha256": "1186af2b965a86024e47a8888528b77468f2084719ced60cfaecdd2ef055b1d1",
+    "randomness": "OpenSSL CSPRNG; seed controls pool choices only; replay saved data"
+  }
+}
