@@ -14,6 +14,7 @@
   --red: #bd3b51;
   --red-soft: #fff0f2;
   --purple: #7352ba;
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
   font-family: "Segoe UI", "Noto Sans", "Microsoft YaHei", sans-serif;
   font-synthesis: none;
 }
@@ -171,10 +172,23 @@ kbd { font: inherit; color: var(--ink); }
 .verification dl { margin: 0; display: grid; grid-template-columns: 1fr auto; font-size: 13px; gap: 9px; }
 .verification dt { color: var(--muted); }
 .verification dd { margin: 0; font-weight: 650; }
-.reveal { animation: reveal .45s ease-out both; }
-.pulse { animation: pulse .7s ease-out; }
-@keyframes reveal { from { opacity: .2; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pulse { 45% { box-shadow: 0 0 0 7px #235de313; } }
+.motion-layer { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 20; }
+.motion-layer * { pointer-events: none !important; }
+.key, .factor, .record, .case-result, .status-pill, .tag {
+  transition: background-color .55s var(--motion-ease), color .55s var(--motion-ease),
+    border-color .55s var(--motion-ease);
+}
+.tree-svg .cell, .triangle-svg rect {
+  transition: fill .6s var(--motion-ease), stroke .6s var(--motion-ease);
+}
+.tree-svg .edge, .triangle-svg .triangle-edge, .attack-connector path {
+  transition: stroke .6s var(--motion-ease);
+}
+.tree-node { transition: opacity .55s var(--motion-ease); }
+.private-key { min-height: 43px; }
+.is-pending { opacity: 0; }
+.status-pill, .record-mapping { transition: opacity .4s var(--motion-ease), background-color .55s var(--motion-ease), color .55s var(--motion-ease); }
+.record-mapping { display: block; }
 @media (min-width: 1450px) {
   .scene { min-height: 485px; }
   .layout { grid-template-columns: minmax(0, 1fr) 335px; gap: 32px; }
@@ -267,6 +281,7 @@ kbd { font: inherit; color: var(--ink); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .particle, .motion-layer { display: none !important; }
 }
 @media (min-width: 851px) and (max-height: 820px) {
   .deck { padding: 16px 28px; }
@@ -333,7 +348,7 @@ kbd { font: inherit; color: var(--ink); }
 @media print {
   body { background: white; }
   .deck { padding: 0; max-width: none; }
-  .controls, .keyboard, .notes, .nav { display: none !important; }
+  .controls, .keyboard, .notes, .nav, .motion-layer { display: none !important; }
   .heading { margin-top: 10px; }
   .layout { grid-template-columns: minmax(0, 1fr) 260px; }
   .scene { break-inside: avoid; }

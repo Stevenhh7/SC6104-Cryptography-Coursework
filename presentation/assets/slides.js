@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   const M = window.RSAMath;
+  const motion = window.RSAMotion;
   const evidence = window.RSAValidation;
   const page = document.body.dataset.page;
   const routes = [
@@ -163,30 +164,29 @@
     <footer class="footer"><span>Small integers show the mechanism · Python validation uses 2048-bit RSA.<br>Algorithm reference: <a href="https://www.usenix.org/system/files/conference/usenixsecurity12/sec12-final228.pdf" target="_blank" rel="noopener">Heninger et al., USENIX Security 2012, §3.3</a></span><span class="keyboard"><kbd>←</kbd> / <kbd>→</kbd> steps · <kbd>Space</kbd> next · <kbd>P</kbd> play · <kbd>N</kbd> notes · <kbd>F</kbd> full screen<br><kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd> pages</span></footer>
     <section class="notes" id="notes" lang="zh-CN" hidden><h2>当前步骤的讲解提示</h2><p id="note-zh"></p><p class="english" id="note-en" lang="en"></p></section>`;
   const byId = id => document.getElementById(id);
-  function particle(path, down = false) {
+  function particle(path, down = false, delay = 0) {
     if (reducedMotion.matches) return '';
-    return `<circle r="4" class="particle ${down ? 'down' : ''}"><animateMotion path="${path}" dur="0.85s" fill="freeze"/></circle>`;
+    return `<circle data-transient data-flow-delay="${delay}" r="4" opacity="0" class="particle ${down ? 'down' : ''}"><animateMotion path="${path}" begin="indefinite" dur="1.05s" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".4 0 .2 1" fill="freeze"/><animate attributeName="opacity" begin="indefinite" dur="1.05s" values="0;1;1;0" keyTimes="0;.12;.85;1" fill="freeze"/></circle>`;
   }
   function attackScene() {
     const revealed = step >= 2, divided = step >= 3, recovered = step >= 4;
     const paths = step === 1 ? ['M200 0 L200 26', 'M600 0 L600 8 Q600 13 594 13 L208 13 Q200 13 200 21 L200 26']
       : step === 2 ? ['M200 26 L200 0', 'M200 26 L200 21 Q200 13 208 13 L594 13 Q600 13 600 8 L600 0'] : [];
     function key(n, q, index) {
-      return `<div class="key ${revealed ? 'highlight' : ''}"><div class="key-label">Public key ${index}<span>known N</span></div><div class="key-number"><small>N<sub>${index}</sub> = </small>${n}</div><div class="factor-row"><span class="factor ${revealed ? 'common reveal' : 'unknown'}">${revealed ? attack.p : '?'}</span><span>×</span><span class="factor ${divided ? 'reveal' : 'unknown'}">${divided ? q : '?'}</span></div><div class="key-exponent">Public exponent e = ${attack.e}</div></div>`;
+      return `<div class="key ${revealed ? 'highlight' : ''}"><div class="key-label">Public key ${index}<span>known N</span></div><div class="key-number"><small>N<sub>${index}</sub> = </small>${n}</div><div class="factor-row"><span data-motion-delay="${200 + index * 80}" class="factor ${revealed ? 'common' : 'unknown'}">${revealed ? attack.p : '?'}</span><span>×</span><span data-motion-delay="${100 + index * 80}" class="factor ${divided ? '' : 'unknown'}">${divided ? q : '?'}</span></div><div class="key-exponent">Public exponent e = ${attack.e}</div></div>`;
     }
     function privateKey(lambda, d) {
-      return `<div class="private-key ${recovered ? 'reveal' : ''}">${recovered ? `<span>λ(N) = ${lambda}</span><strong>d = ${d}</strong><small>${attack.e}d ≡ 1 (mod ${lambda})</small>` : '<span class="muted-placeholder">Private exponent d = ? · waiting for factors</span>'}</div>`;
+      return `<div class="private-key" data-motion-delay="120">${recovered ? `<span>λ(N) = ${lambda}</span><strong>d = ${d}</strong><small>${attack.e}d ≡ 1 (mod ${lambda})</small>` : '<span class="muted-placeholder">Private exponent d = ? · waiting for factors</span>'}</div>`;
     }
     return `<div class="attack-scene"><div class="key-pair">${key(attack.n1, attack.q1, 1)}${key(attack.n2, attack.q2, 2)}</div>
-      <svg class="attack-connector" viewBox="0 0 800 26" role="img" aria-label="Public moduli flow into GCD; the recovered factor flows back to both keys"><path d="M200 0 L200 26 M600 0 L600 8 Q600 13 594 13 L208 13 Q200 13 200 21 L200 26" stroke="${revealed ? '#d6899b' : '#b5c5e2'}" stroke-width="1.5" fill="none"/>${paths.map(path => particle(path)).join('')}</svg>
-      <div class="attack-core" style="margin-top:0"><div class="gcd-hub ${step === 2 ? 'pulse' : ''}"><div class="equation math">gcd(77, 91) = <b>${revealed ? attack.p : '?'}</b></div><span class="hub-caption">${revealed ? 'Nontrivial divisor of both moduli' : 'Computed from public inputs only'}</span></div>
-        <div class="euclid">${step >= 1 ? M.euclid(attack.n2, attack.n1).map((row, i) => `<div class="euclid-row ${step === 1 ? 'reveal' : ''}" style="animation-delay:${i * 170}ms">${row.a} = ${row.quotient} × ${row.b} + ${row.remainder}</div>`).join('') : '<div class="muted-placeholder" style="font-size:14px;padding:10px">Euclid’s division steps<br>appear on the next step.</div>'}</div></div>
+      <svg class="attack-connector" viewBox="0 0 800 26" role="img" aria-label="Public moduli flow into GCD; the recovered factor flows back to both keys"><path d="M200 0 L200 26 M600 0 L600 8 Q600 13 594 13 L208 13 Q200 13 200 21 L200 26" stroke="${revealed ? '#d6899b' : '#b5c5e2'}" stroke-width="1.5" fill="none"/>${paths.map((path, i) => particle(path, false, i * 60)).join('')}</svg>
+      <div class="attack-core" style="margin-top:0"><div class="gcd-hub"><div class="equation math">gcd(77, 91) = <b>${revealed ? attack.p : '?'}</b></div><span class="hub-caption">${revealed ? 'Nontrivial divisor of both moduli' : 'Computed from public inputs only'}</span></div>
+        <div class="euclid">${step >= 1 ? M.euclid(attack.n2, attack.n1).map((row, i) => `<div class="euclid-row" data-motion-delay="${130 + i * 130}">${row.a} = ${row.quotient} × ${row.b} + ${row.remainder}</div>`).join('') : '<div class="muted-placeholder" style="font-size:14px;padding:10px">Euclid’s division steps<br>appear on the next step.</div>'}</div></div>
       <div class="private-row">${privateKey(attack.lambda1, attack.d1)}${privateKey(attack.lambda2, attack.d2)}</div>
       <div class="flow-caption">${step >= 5 ? '<strong>Validated handoff:</strong> recovered factors → reconstructed key → OAEP decryption' : 'The GCD exposes p; integer division recovers q.'}</div></div>`;
   }
   function treeNode(x, y, value, label, visible, remainder, state = '') {
-    if (!visible) return `<g opacity=".35"><rect class="cell" x="${x - 76}" y="${y - 37}" width="152" height="74" rx="11" stroke-dasharray="4 5"/><text class="node-label" x="${x}" y="${y + 4}" text-anchor="middle">${label}</text></g>`;
-    return `<g class="${step === 1 || step === 2 ? 'reveal' : ''}"><rect class="cell ${state}" x="${x - 76}" y="${y - 37}" width="152" height="74" rx="11"/><text class="node-label" x="${x}" y="${y - 17}" text-anchor="middle">${label}</text><text class="node-value" x="${x}" y="${y + 8}" text-anchor="middle">${value}</text>${remainder !== undefined ? `<text class="node-rem" x="${x}" y="${y + 27}" text-anchor="middle">r = ${remainder}</text>` : ''}</g>`;
+    return `<g class="tree-node" opacity="${visible ? '1' : '.35'}"><rect class="cell ${visible ? state : ''}" x="${x - 76}" y="${y - 37}" width="152" height="74" rx="11" ${visible ? '' : 'stroke-dasharray="4 5"'}/><text class="node-label" x="${x}" y="${y - 17}" text-anchor="middle">${label}</text><text class="node-value" data-motion-delay="400" opacity="${visible ? '1' : '0'}" x="${x}" y="${y + 8}" text-anchor="middle">${value}</text><text class="node-rem" data-motion-delay="430" opacity="${remainder !== undefined ? '1' : '0'}" x="${x}" y="${y + 27}" text-anchor="middle">${remainder !== undefined ? `r = ${remainder}` : ''}</text></g>`;
   }
   function batchScene() {
     const lowerUp = ['M135 234 L135 223 Q135 217 144 217 L251 217 Q260 217 260 207 L260 202', 'M385 234 L385 223 Q385 217 376 217 L269 217 Q260 217 260 207 L260 202', 'M640 234 L640 202'];
@@ -204,8 +204,8 @@
       ${treeNode(260, 165, 315, squares ? 'mod 315² = 99,225' : '15 × 21', step >= 1, step >= 4 ? batch.remainderLevels[1][0] : undefined, step >= 4 ? 'teal' : 'blue')}
       ${treeNode(640, 165, 143, squares ? 'mod 143² = 20,449' : '143 · carried once', step >= 1, step >= 4 ? batch.remainderLevels[1][1] : undefined, step >= 4 ? 'teal' : 'blue')}
       ${[135, 385, 640].map((x, i) => treeNode(x, 271, number(batchValues[i]), squares ? `mod ${batchValues[i]}² = ${batchValues[i] ** 2n}` : `Input N${i + 1}`, true, step >= 5 ? batch.remainders[i] : undefined, step >= 5 ? (step >= 7 && i === 2 ? 'clean' : 'teal') : '')).join('')}
-      ${flowPaths.map(path => particle(path, step >= 4)).join('')}</svg>`;
-    const results = batchValues.map((n, i) => `<div class="tree-result ${step >= 7 && batch.gcds[i] > 1n ? 'found' : ''}">${step >= 6 ? `${batch.remainders[i]} / ${n} = ${batch.quotients[i]}` : 'Exact division pending'}${step >= 7 ? `<strong>gcd(${n}, ${batch.quotients[i]}) = ${batch.gcds[i]}</strong>` : '<strong class="muted-placeholder">gcd = ?</strong>'}</div>`).join('');
+      ${flowPaths.map((path, i) => particle(path, step >= 4, i * 60)).join('')}</svg>`;
+    const results = batchValues.map((n, i) => `<div data-motion-delay="${110 + i * 90}" class="tree-result ${step >= 7 && batch.gcds[i] > 1n ? 'found' : ''}">${step >= 6 ? `${batch.remainders[i]} / ${n} = ${batch.quotients[i]}` : 'Exact division pending'}${step >= 7 ? `<strong>gcd(${n}, ${batch.quotients[i]}) = ${batch.gcds[i]}</strong>` : '<strong class="muted-placeholder">gcd = ?</strong>'}</div>`).join('');
     const mobile = `<div class="tree-mobile"><div class="mobile-level">Root P<div class="mobile-values"><span class="mobile-value">${step >= 2 ? batch.product : '?'}</span></div></div><div class="mobile-level">Pair products<div class="mobile-values">${[315n, 143n].map((n, i) => `<span class="mobile-value">${step >= 1 ? n : '?'}${step >= 4 ? `<small>r = ${batch.remainderLevels[1][i]}</small>` : ''}</span>`).join('')}</div></div><div class="mobile-level">Input moduli<div class="mobile-values">${batchValues.map((n, i) => `<span class="mobile-value">${n}${step >= 5 ? `<small>r = ${batch.remainders[i]}</small>` : ''}${step >= 6 ? `<small>r / N = ${batch.quotients[i]}</small>` : ''}${step >= 7 ? `<small>gcd = ${batch.gcds[i]}</small>` : ''}</span>`).join('')}</div></div></div>`;
     return `<div class="tree-wrap">${svg}</div>${mobile}<div class="tree-result-row">${results}</div><div class="method-strip"><span>Pairwise baseline:</span><b>1,000 moduli = 499,500 GCD pairs</b><span>· comparison count, not a speed claim</span></div>`;
   }
@@ -222,19 +222,19 @@
       math = fallbackEnabled ? 'gcd(15, 21) = <strong>3</strong><br>15 = 3 × 5' : 'g = N<br><strong>Keep unresolved</strong>';
       description = fallbackEnabled ? (finished ? 'Repeat for the remaining candidates, then map factors back to every record.' : 'A nontrivial pairwise GCD separates the factors of 15.') : 'Fallback budget = 0. No factor is claimed; the CLI reports exit code 4.';
     }
-    const status = overlap ? `<span class="status-pill ${split ? 'found' : 'unresolved'}">${split ? 'factor_found' : 'unresolved_full_overlap'}</span>` : '';
+    const status = `<span aria-hidden="${!overlap}" class="status-pill ${split ? 'found' : 'unresolved'} ${overlap ? '' : 'is-pending'}">${split ? 'factor_found' : 'unresolved_full_overlap'}</span>`;
     const triangle = `<svg class="triangle-svg" viewBox="0 0 340 190" role="img" aria-label="15 and 21 share 3; 15 and 35 share 5; 21 and 35 share 7"><title>Full-overlap triangle</title>
       ${paths.map((path, i) => `<path class="triangle-edge ${overlap ? ['prime3','prime5','prime7'][i] : ''}" d="${path}"/>`).join('')}
-      ${overlap ? '<text class="prime-label" x="170" y="32" text-anchor="middle">shared 3</text><text class="prime-label" x="83" y="112" text-anchor="middle">5</text><text class="prime-label" x="259" y="112" text-anchor="middle">7</text>' : ''}
+      <text class="prime-label" opacity="${overlap ? 1 : 0}" data-motion-delay="120" x="170" y="32" text-anchor="middle">shared 3</text><text class="prime-label" opacity="${overlap ? 1 : 0}" data-motion-delay="220" x="83" y="112" text-anchor="middle">5</text><text class="prime-label" opacity="${overlap ? 1 : 0}" data-motion-delay="320" x="259" y="112" text-anchor="middle">7</text>
       ${[[65,44,15],[275,44,21],[170,156,35]].map(([x,y,n]) => `<rect x="${x-37}" y="${y-23}" width="74" height="46" rx="10" fill="${overlap ? '#fff4df' : '#f2f6fd'}" stroke="${overlap ? '#dfbc85' : '#cbd7e9'}"/><text class="case-value" x="${x}" y="${y+8}" text-anchor="middle">${n}</text>`).join('')}
       ${step === 3 && fallbackEnabled ? particle(paths[0]) : ''}</svg>`;
     const resultRows = model.unique.map((n, i) => {
       const hasFactor = split && (finished || i === 0);
       const factor = model.factors.get(i);
       const rowStatus = hasFactor ? 'found' : overlap ? 'unresolved' : '';
-      return `<div class="case-result ${rowStatus}"><strong>${hasFactor ? `${n} = ${factor} × ${n / factor}` : `N = ${n}`}</strong><span>${hasFactor ? 'factor_found' : overlap ? 'unresolved' : 'awaiting scan'}</span>${finished && i === 0 ? '<br><span>A + A-copy</span>' : ''}</div>`;
+      return `<div data-motion-delay="${100 + i * 100}" class="case-result ${rowStatus}"><strong>${hasFactor ? `${n} = ${factor} × ${n / factor}` : `N = ${n}`}</strong><span>${hasFactor ? 'factor_found' : overlap ? 'unresolved' : 'awaiting scan'}</span><span aria-hidden="${!(finished && i === 0)}" class="record-mapping ${finished && i === 0 ? '' : 'is-pending'}">A + A-copy</span></div>`;
     }).join('');
-    return `<div class="case-scene"><div class="records">${records.map((record, i) => `<div class="record ${i === 3 ? 'duplicate' : ''} ${i === 3 && deduped ? 'merged reveal' : ''}"><span class="record-id">${record.id}</span><span class="record-n">${i === 3 && deduped ? 'Mapped to A' : `N = ${record.n}`}</span></div>`).join('')}</div><div class="case-work">${triangle}<div class="case-equation"><div class="big-math math">${math}</div><div class="description">${description}</div>${status}</div></div><div class="result-list">${resultRows}</div><label class="fallback-control"><input id="fallback" type="checkbox" ${fallbackEnabled ? 'checked' : ''}>Enable pairwise fallback <span class="tag ${fallbackEnabled ? 'teal' : 'amber'}">${fallbackEnabled ? 'default: unlimited' : 'budget: 0'}</span></label></div>`;
+    return `<div class="case-scene"><div class="records">${records.map((record, i) => `<div class="record ${i === 3 ? 'duplicate' : ''} ${i === 3 && deduped ? 'merged' : ''}"><span class="record-id">${record.id}</span><span class="record-n">${i === 3 && deduped ? 'Mapped to A' : `N = ${record.n}`}</span></div>`).join('')}</div><div class="case-work">${triangle}<div class="case-equation"><div class="big-math math">${math}</div><div class="description">${description}</div>${status}</div></div><div class="result-list">${resultRows}</div><label class="fallback-control"><input id="fallback" type="checkbox" ${fallbackEnabled ? 'checked' : ''}>Enable pairwise fallback <span class="tag ${fallbackEnabled ? 'teal' : 'amber'}">${fallbackEnabled ? 'default: unlimited' : 'budget: 0'}</span></label></div>`;
   }
   function renderProof() {
     if (page === 'attack') return `<strong>2048-bit Python fixture</strong>${evidence.unique_modulus_count} unique moduli · ${evidence.factored_unique_moduli} factored.<br>OAEP recovery verified.<br>On-screen: tiny moduli, e = 17.`;
@@ -250,27 +250,30 @@
     byId('note-zh').textContent = state.note;
     byId('note-en').textContent = state.spoken;
   }
-  function update() {
+  function update(animateChange = true) {
+    const snapshot = animateChange ? motion.capture() : null;
     const state = definition.steps[step];
     byId('step-number').textContent = step + 1;
     byId('step-label').textContent = `STEP ${step + 1} OF ${definition.steps.length}`;
     byId('step-title').textContent = page === 'edges' && step === 3 && !fallbackEnabled ? 'Preserve the unresolved state' : state.title;
     byId('step-copy').textContent = page === 'edges' && step >= 3 && !fallbackEnabled ? 'Checks are disabled. Preserve full-overlap results explicitly, without claiming a recovered factor.' : state.copy;
-    byId('step-formula').innerHTML = page === 'edges' && step === 3 && !fallbackEnabled ? 'g<sub>i</sub> = N<sub>i</sub><br>status = unresolved' : state.formula;
+    motion.patch(byId('step-formula'), page === 'edges' && step === 3 && !fallbackEnabled ? 'g<sub>i</sub> = N<sub>i</sub><br>status = unresolved' : state.formula);
     byId('step-formula').hidden = page === 'edges' && step === 4;
-    byId('side-proof').innerHTML = renderProof();
+    motion.patch(byId('side-proof'), renderProof());
     byId('scene-tag').textContent = page === 'attack' ? 'e = 17 · teaching arithmetic' : page === 'batch' ? `${step < 4 ? 'PRODUCTS ↑' : 'REMAINDERS ↓'}` : `${step ? '3 unique moduli' : '4 public records'}`;
     byId('scene-tag').className = `tag ${page === 'batch' && step >= 4 ? 'teal' : 'blue'}`;
-    byId('scene-content').innerHTML = page === 'attack' ? attackScene() : page === 'batch' ? batchScene() : caseScene();
-    const fallback = byId('fallback');
-    if (fallback) fallback.addEventListener('change', event => { fallbackEnabled = event.target.checked; update(); byId('fallback').focus(); });
-    byId('progress-track').innerHTML = definition.steps.map((_, i) => `<span class="progress-segment ${i <= step ? 'complete' : ''}"></span>`).join('');
+    motion.patch(byId('scene-content'), page === 'attack' ? attackScene() : page === 'batch' ? batchScene() : caseScene());
+    byId('scene-content').querySelectorAll('[data-transient] animateMotion, [data-transient] animate').forEach(animation => {
+      animation.beginElementAt(Number(animation.parentElement.dataset.flowDelay || 0) / 1000);
+    });
+    motion.patch(byId('progress-track'), definition.steps.map((_, i) => `<span class="progress-segment ${i <= step ? 'complete' : ''}"></span>`).join(''));
     byId('progress-track').setAttribute('aria-valuenow', String(step + 1));
     byId('progress-track').setAttribute('aria-valuetext', `${step + 1} of ${definition.steps.length}: ${state.title}`);
     byId('progress-text').textContent = `${step + 1} / ${definition.steps.length}`;
     byId('previous').disabled = step === 0;
     byId('next').disabled = step === definition.steps.length - 1;
     renderNotes();
+    motion.play(snapshot);
   }
   function pause() {
     if (timer !== null) clearInterval(timer);
@@ -309,6 +312,9 @@
   byId('play').addEventListener('click', togglePlay);
   byId('notes-button').addEventListener('click', toggleNotes);
   byId('fullscreen').addEventListener('click', toggleFullscreen);
+  byId('scene-content').addEventListener('change', event => {
+    if (event.target.id === 'fallback') { fallbackEnabled = event.target.checked; update(); }
+  });
   document.addEventListener('fullscreenchange', () => { byId('fullscreen').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
   document.addEventListener('keydown', event => {
@@ -324,5 +330,5 @@
     else if (event.key === 'PageDown' && currentPage < 2) { event.preventDefault(); window.location.href = routes[currentPage + 1].href; }
     else if (event.key === 'PageUp' && currentPage > 0) { event.preventDefault(); window.location.href = routes[currentPage - 1].href; }
   });
-  update();
+  update(false);
 })();
