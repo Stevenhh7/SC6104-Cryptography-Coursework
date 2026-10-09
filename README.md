@@ -2,9 +2,37 @@
 
 **项目题目：弱随机性下 RSA 共享素因子的批量检测与私钥恢复。**
 
-本仓库当前完成 A 的部分：两两 GCD、基于乘积树／余数树的批量 GCD、去重、特殊情况回退、统一检测接口、阶段计时、正确性测试和演讲材料。
+本仓库整合 A 的检测引擎与 B 的数据生成、私钥恢复、OAEP、独立评估、性能实验及完整演示。A 的算法仍在 `rsa_audit/`，B 的 `rsa_lab/detection.py` 只转换接口并调用该引擎。
 
-固定样本包含真实的 2048-bit RSA 模数。扫描器只接收公开的 `id、n、e`，不读取生成时的因子或私钥。B 可接入数据生成、私钥恢复、正式实验和完整演示。
+固定样本包含真实的 2048-bit RSA 模数。扫描器只接收公开的 `id、n、e`，不读取生成时的因子或私钥。完整攻击完成后才由独立评估阶段读取真值。
+
+## 整合版快速入口
+
+先阅读 [开始使用](START_HERE.md) 和 [接口整合记录](docs/INTEGRATION.md)。最终总展示在 [presentation/final.html](presentation/final.html)，原来的三页动画继续保留。
+
+```powershell
+python -m pip install -r requirements.txt
+python -X utf8 -m rsa_lab demo
+python -X utf8 -m rsa_lab validate
+python -X utf8 -m unittest discover -s tests -v
+```
+
+完整 demo 检测 100 个不同的 2048 位模数，包含 2 条重复记录，恢复 5 个不同模数并验证 6 条 OAEP 密文。`scan` 与 `recover` 在独立进程中运行，只接收公开输入。新密钥更换后重新扫描。`validate` 在 demo 之后运行，验证正常密钥、纯重复记录、孤立弱目标、共享素因子和修复后集合，两种算法共 10 次扫描，并检查错误 OAEP label 与被修改的密文。70 项 Python 测试全部通过。
+
+总展示的 8 页、按钮、补充证据窗口和 [8 分钟讲稿](docs/PRESENTATION.md) 全部使用英文。[GitHub 交接清单](docs/GITHUB_HANDOFF.md) 列明上传范围与两人整合步骤。
+
+```powershell
+python -X utf8 -m rsa_lab prepare-bench --sizes 100,300,1000,3000
+python -X utf8 -m rsa_lab benchmark --sizes 100,300,1000,3000 --repeats 3 --timeout 45 --backend gmpy2
+python -X utf8 -m rsa_lab plot
+python -X utf8 -m rsa_lab pool-experiment --count 60 --sizes 4,16,64 --repeats 3
+.\run_tests.ps1
+python -X utf8 -m rsa_lab report
+python -X utf8 scripts/export_showcase.py
+python -X utf8 scripts/verify_showcase.py
+```
+
+本整合版测量见 [实测报告](artifacts/RESULTS.md)。算法计时来自 A 引擎，包含转换、树结构、GCD、回退和结果构造，不包含适配层格式转换、文件 I/O 和之后的私钥恢复。全量随机实验数据保留本地，Git 中归档配置、输入哈希、原始测量与图表。重新生成具有相同结构的数据可复测方法，但随机素数与耗时不保证完全相同。
 
 ## 从这里开始
 
@@ -18,7 +46,7 @@
 
 ## 快速运行
 
-需要 Python 3.10 或以上。所有命令都在仓库根目录执行。默认后端只使用 Python 标准库，无需安装依赖。
+需要 Python 3.10 或以上。所有命令都在仓库根目录执行。下面的 A 基础检测命令只使用 Python 标准库，完整 B 实验需要上面的 requirements.txt。
 
 ```powershell
 python -m rsa_audit examples/toy_public_keys.jsonl
@@ -27,7 +55,7 @@ python -m rsa_audit tests/fixtures/rsa2048_public.jsonl --method pairwise --outp
 python -m unittest discover -v
 ```
 
-本机已创建 `.venv`，可直接使用：
+在仓库内创建 `.venv` 后，可直接使用：
 
 ```powershell
 .\.venv\Scripts\python.exe -m rsa_audit tests/fixtures/rsa2048_public.jsonl --backend gmpy2 --output results/batch.json
@@ -53,7 +81,7 @@ python -m venv .venv
 
 - `id`：非空字符串，整个输入文件内唯一。
 - `n`：十六进制字符串，推荐始终使用 `0x` 前缀。
-- `e`：JSON 整数；保留每条记录各自的指数。
+- `e`：JSON 整数；A/B 新生成的公开输入统一采用该格式，并保留每条记录各自的指数。
 - 示例中的 `0xf` 是教学小整数。真实数据见 `tests/fixtures/rsa2048_public.jsonl`。
 - 相同模数可以以不同 ID 重复出现，程序先去重，再映射回全部记录。
 - 输入包含 `p、q、d` 或其他字段会被拒绝。真值文件应由 B 单独保存。
@@ -122,7 +150,7 @@ docs/
   VALIDATION.md      验证记录和范围
 ```
 
-`results/、work/、.venv/` 不纳入版本控制。运行结果应在正式实验时由 B 统一归档。
+`results/、work/、data/、.venv/` 不纳入版本控制。B 已将正式结果归档到 `artifacts/`。运行 `scripts/export_showcase.py` 可根据新结果更新归档及离线展示数据。
 
 ## 范围与边界
 
@@ -130,7 +158,7 @@ docs/
 - 默认回退会尝试拆分所有全重叠候选项；极端情况下回退仍可能带来二次级的两两检查。
 - `--timeout` 在大整数运算之间检查时限，不能中断正在执行的单次乘法或求余。正式基准测试需要硬超时时，由 B 使用独立进程控制。
 - 固定的 2048-bit 样本用于正确性和接口验证，不能代替 100–3000 个独立模数的正式性能实验。
-- OAEP 恢复验证位于测试中，作为交接证据；B 仍负责完整恢复模块、数据生成器、正式性能分析及演示整合。
+- 固定 OAEP 挑战继续作为交接测试。完整恢复、数据生成、正式性能分析及演示已在 `rsa_lab/` 中实现。
 
 ## 参考资料
 

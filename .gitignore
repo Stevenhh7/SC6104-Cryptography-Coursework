@@ -7,3 +7,10 @@ dist/
 results/
 outputs/
 work/
+.venv/
+data/
+vendor/
+*.pem
+ground_truth.json
+new_private_parameters.json
+/RESULTS.md

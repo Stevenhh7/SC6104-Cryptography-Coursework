@@ -1,0 +1,10 @@
+/* Reuse A's animation assets without changing the standalone presentation. */
+.topbar,.footer{display:none}
+#notes-button,#notes{display:none!important}
+.deck{padding:12px 32px 4px}
+.heading{margin:8px 0 16px}
+.scene{min-height:380px}
+@media(max-height:650px){
+  .tree-svg{max-height:275px}
+  .controls{margin-top:12px}
+}

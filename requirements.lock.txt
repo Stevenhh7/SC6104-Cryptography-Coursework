@@ -1,0 +1,4 @@
+pycryptodome==3.22.0
+cryptography==47.0.0
+matplotlib==3.9.2
+gmpy2==2.3.2

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "config": {
+    "count": 100,
+    "bits": 2048,
+    "mode": "demo"
+  },
+  "record_count": 102,
+  "unique_moduli": 100,
+  "actual_vulnerable_moduli": 5,
+  "actual_weak_fraction": 0.05,
+  "generation_seconds": 3.871926900001199,
+  "public_sha256": "b40245a8b8c254ebf6c7b0206f8dbca05ecd6f7f24956716b9d9f7f8c91dfbe8",
+  "ciphertexts_sha256": "473fff01bd2f925642c9f3c911ee6ad38dab5e189500316d30c0e16bb5fb5032",
+  "randomness": "OpenSSL CSPRNG; seed controls pool choices only; replay saved data",
+  "source_public_sha256": "833d8d3e823943b9d9792c9f2695c35a8bcc903c688a0e6f3c7554a1dd434727",
+  "source_ciphertexts_sha256": "88e636380a915da93163b100753b17fc4320dbd3fafbe2628be0acf9624ae501",
+  "archive_line_endings": "UTF-8 LF; original-run byte hashes retained as source_*"
+}
