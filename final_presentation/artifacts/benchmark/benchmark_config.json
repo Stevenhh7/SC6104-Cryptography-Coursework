@@ -1,0 +1,12 @@
+{
+  "sizes": [
+    100,
+    300,
+    1000,
+    3000
+  ],
+  "repeats": 3,
+  "worker_timeout_seconds": 45.0,
+  "backend": "gmpy2",
+  "timeout_scope": "whole subprocess including startup, I/O and scan; timed-out scan seconds left empty"
+}

@@ -1,0 +1,12 @@
+{
+  "expected_recoverable_moduli": 5,
+  "correctly_factored_moduli": 5,
+  "false_positives": 0,
+  "false_negatives": 0,
+  "invalid_factors": 0,
+  "verified_decryption_records": 6,
+  "verified_decryption_moduli": 5,
+  "invalid_decryptions": [],
+  "duplicate_records": 2,
+  "passed": true
+}

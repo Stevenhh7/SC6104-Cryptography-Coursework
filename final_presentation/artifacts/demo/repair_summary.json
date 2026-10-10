@@ -1,0 +1,8 @@
+{
+  "replaced_unique_moduli": 5,
+  "affected_records": 6,
+  "new_key_roundtrip_records": 6,
+  "note": "只验证当前集合共享因子关系；保留原本重复记录的对应关系",
+  "original_public_sha256": "b40245a8b8c254ebf6c7b0206f8dbca05ecd6f7f24956716b9d9f7f8c91dfbe8",
+  "source_original_public_sha256": "833d8d3e823943b9d9792c9f2695c35a8bcc903c688a0e6f3c7554a1dd434727"
+}

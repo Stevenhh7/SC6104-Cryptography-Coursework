@@ -4,7 +4,7 @@
 
 ## 最终展示
 
-双击 `presentation/final.html` 打开离线总展示。8 页正文、导航按钮、补充窗口和讲稿全部为英文。总展示包含 A 的三页动画、B 的实测性能图、真实 OAEP 演示记录和修复结论。下方按钮切换总页面，点击动画内的按钮控制数学步骤。第 5、6、8 页的补充窗口提供阶段耗时、私钥恢复、对照实验及弱素数池证据，适合问答时使用。
+演示资料集中在 `final_presentation/`。双击 `final_presentation/final.html` 打开离线总展示；现场执行使用 `final_presentation/run_presentation.cmd`，打开服务输出的网址，并在第 6 页点击 **Run Python pipeline**。8 页正文、导航按钮和补充窗口为英文，讲稿独立放在 `final_presentation/docs/FINAL_SPEECH.md`。总展示包含 A 的三页动画、实测性能、OAEP 恢复与换钥结果。
 
 现场操作运行 `run_demo.cmd`，或在仓库根目录执行：
 
@@ -26,7 +26,7 @@ python -m venv .venv
 
 - `docs/INTEGRATION.md`：接口变更与验证。
 - `docs/B_CODE_GUIDE.md`：B 核心代码解释。
-- `docs/PRESENTATION.md`：8 分钟讲稿。
+- `final_presentation/docs/FINAL_SPEECH.md`：正式 8 分钟讲稿、分工和现场操作。
 - `docs/GITHUB_HANDOFF.md`：GitHub 上传清单和队友整合步骤。
 - `docs/B_IMPROVEMENTS.md`：B 实现与课程要求的对应改进。
 - `artifacts/RESULTS.md`：本整合版本的实测报告。

@@ -1,0 +1,16 @@
+{
+  "description": "Fixed 2048-bit public fixture: double-overlap, triangle, clean controls, duplicates",
+  "record_count": 16,
+  "unique_modulus_count": 14,
+  "factored_ids": [
+    "key-00",
+    "key-01",
+    "key-02",
+    "key-03",
+    "key-04",
+    "key-05",
+    "copy-00"
+  ],
+  "batch_full_overlap_count": 4,
+  "fixture_sha256": "47f54e41523226931c960e84111cfe1361c976b89d5340b075cb5a1c137003fe"
+}
