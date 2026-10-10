@@ -4,6 +4,8 @@
   const motion = window.RSAMotion;
   const evidence = window.RSAValidation;
   const page = document.body.dataset.page;
+  const embedded = document.body.dataset.embedded === 'true' && window.parent !== window;
+  const finalEvidence = embedded && window.RSA_FINAL_DATA;
   const routes = [
     {id: 'attack', href: 'index.html', label: '01 · Shared prime'},
     {id: 'batch', href: 'batch-gcd.html', label: '02 · Batch GCD'},
@@ -131,7 +133,7 @@
   const definition = definitions[page];
   let step = 0, timer = null, fallbackEnabled = true;
   let notesVisible = false;
-  try { notesVisible = sessionStorage.getItem('rsa-speaker-notes') === 'true'; } catch (_) {}
+  try { notesVisible = !embedded && sessionStorage.getItem('rsa-speaker-notes') === 'true'; } catch (_) {}
   const deck = document.getElementById('deck');
   deck.innerHTML = `
     <header class="topbar">
@@ -237,12 +239,15 @@
     return `<div class="case-scene"><div class="records">${records.map((record, i) => `<div class="record ${i === 3 ? 'duplicate' : ''} ${i === 3 && deduped ? 'merged' : ''}"><span class="record-id">${record.id}</span><span class="record-n">${i === 3 && deduped ? 'Mapped to A' : `N = ${record.n}`}</span></div>`).join('')}</div><div class="case-work">${triangle}<div class="case-equation"><div class="big-math math">${math}</div><div class="description">${description}</div>${status}</div></div><div class="result-list">${resultRows}</div><label class="fallback-control"><input id="fallback" type="checkbox" ${fallbackEnabled ? 'checked' : ''}>Enable pairwise fallback <span class="tag ${fallbackEnabled ? 'teal' : 'amber'}">${fallbackEnabled ? 'default: unlimited' : 'budget: 0'}</span></label></div>`;
   }
   function renderProof() {
+    if (finalEvidence && page === 'attack') return `<strong>Verified 2048-bit experiment</strong>${finalEvidence.input.unique_moduli} distinct moduli · ${finalEvidence.demo.correctly_factored_moduli} keys recovered.<br>${finalEvidence.demo.verified_decryption_records} OAEP messages verified.<br>Diagram: exact small-integer arithmetic.`;
+    if (finalEvidence && page === 'edges' && step >= 4) return `<div class="verification"><h3>Verified experiment</h3><dl><dt>Recovered distinct keys</dt><dd>${finalEvidence.demo.correctly_factored_moduli} / ${finalEvidence.input.unique_moduli}</dd><dt>Full overlaps resolved</dt><dd>${finalEvidence.fallback_candidates}</dd><dt>Control scans passed</dt><dd>${finalEvidence.controls.summary.scan_runs}</dd><dt>OAEP negative checks</dt><dd>${finalEvidence.controls.summary.oaep_negative_checks}</dd></dl></div><div style="margin-top:14px"><strong>Scope of a clean result</strong>Only this collection is covered.</div>`;
     if (page === 'attack') return `<strong>2048-bit Python fixture</strong>${evidence.unique_modulus_count} unique moduli · ${evidence.factored_unique_moduli} factored.<br>OAEP recovery verified.<br>On-screen: tiny moduli, e = 17.`;
     if (page === 'batch') return '<strong>Invariant: remainder = P mod V²</strong>Carry odd leaves once.<br>Require exact division before GCD.';
     if (step < 4) return '<strong>Three explicit result states</strong><code>factor_found</code><br><code>no_shared_factor</code><br><code>unresolved_full_overlap</code>';
     return `<div class="verification"><h3>Python verification · ${evidence.verified_date}</h3><dl><dt>Tests passed</dt><dd>${evidence.test_methods}</dd><dt>RSA modulus length</dt><dd>2048 bit</dd><dt>Factored unique moduli</dt><dd>${evidence.factored_unique_moduli} / ${evidence.unique_modulus_count}</dd><dt>Full overlaps resolved</dt><dd>${evidence.batch_full_overlap_count}</dd></dl></div><div style="margin-top:14px"><strong>Scope of a clean result</strong>Only this collection is covered.<br>Fix randomness; rotate affected keys.</div>`;
   }
   function renderNotes() {
+    if (embedded) { byId('notes').hidden = true; return; }
     const state = definition.steps[step];
     byId('notes').hidden = !notesVisible;
     byId('notes-button').setAttribute('aria-expanded', String(notesVisible));
@@ -296,6 +301,7 @@
     timer = setInterval(() => move(1), 3200);
   }
   function toggleNotes() {
+    if (embedded) return;
     notesVisible = !notesVisible;
     try { sessionStorage.setItem('rsa-speaker-notes', String(notesVisible)); } catch (_) {}
     renderNotes();
@@ -317,6 +323,22 @@
   });
   document.addEventListener('fullscreenchange', () => { byId('fullscreen').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+  if (embedded) {
+    window.addEventListener('message', event => {
+      if (event.source !== window.parent || event.origin !== window.location.origin) return;
+      if (event.data?.type === 'rsa-presentation:visibility' && event.data.active === false) pause();
+    });
+  }
+  function navigatePage(index) {
+    pause();
+    if (embedded) window.parent.postMessage({type: 'rsa-presentation:select', page: index + 1}, '*');
+    else window.location.href = routes[index].href;
+  }
+  function turnPage(delta) {
+    pause();
+    if (embedded) window.parent.postMessage({type: 'rsa-presentation:turn', delta}, '*');
+    else if (currentPage + delta >= 0 && currentPage + delta < routes.length) navigatePage(currentPage + delta);
+  }
   document.addEventListener('keydown', event => {
     if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest('input,select,textarea')) return;
     if (event.target.closest('button,a') && (event.key === ' ' || event.key === 'Enter')) return;
@@ -326,9 +348,9 @@
     else if (event.key.toLowerCase() === 'p') togglePlay();
     else if (event.key.toLowerCase() === 'n') toggleNotes();
     else if (event.key.toLowerCase() === 'f') toggleFullscreen();
-    else if (/^[123]$/.test(event.key)) window.location.href = routes[Number(event.key) - 1].href;
-    else if (event.key === 'PageDown' && currentPage < 2) { event.preventDefault(); window.location.href = routes[currentPage + 1].href; }
-    else if (event.key === 'PageUp' && currentPage > 0) { event.preventDefault(); window.location.href = routes[currentPage - 1].href; }
+    else if (/^[123]$/.test(event.key)) { event.preventDefault(); navigatePage(Number(event.key) - 1); }
+    else if (event.key === 'PageDown') { event.preventDefault(); turnPage(1); }
+    else if (event.key === 'PageUp') { event.preventDefault(); turnPage(-1); }
   });
   update(false);
 })();

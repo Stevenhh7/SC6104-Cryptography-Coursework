@@ -1,62 +1,57 @@
-# A 的三页 HTML 讲解
+# 正式展示与动画
 
-## 完整小组展示
+`final.html` 是八页正式展示版。正文、数学说明及按钮为英文，不包含主讲人、计时、演讲提示或讲稿入口。逐页讲稿、两人分工、八分钟节奏和问答在 `../docs/FINAL_SPEECH.md`。
 
-整合版入口为 `final.html`，共 8 页，正文、按钮和补充证据窗口全部为英文；嵌入版隐藏原动画的中文讲解提示。总展示包含三页动画和 B 的正式实测。下方按钮切换整组页面，动画内的 `Next step` 控制数学步骤。第 6 页逐步展示已经保存的 Python 实测记录，重新执行真实攻击使用仓库根目录的 `run_demo.cmd`。页面和全部本地资源可直接离线打开。
+## 现场运行 Python
 
-8 分钟讲稿和分工见 `docs/PRESENTATION.md`。展示数据由 `scripts/export_showcase.py` 从核验后的结果生成。`embed/` 复用 A 的原始脚本及样式，通过独立嵌入样式适配总展示，不修改原来的三页。
+在仓库根目录双击 `run_presentation.cmd`，打开：
 
-直接用浏览器打开 `index.html`。三页正文为英文，提供逐步骤的中文讲解提示和英文口播句。所有字体、样式、脚本及验证数据均可离线使用；页面之间通过相对链接切换。
+http://127.0.0.1:8765/presentation/final.html
 
-## 三页内容
+或者使用 `.venv\Scripts\python.exe -X utf8 scripts/presentation_server.py`。已有静态服务占用端口时，可加 `--port 8766`，并使用对应网址。程序只监听本机回环地址。
 
-| 页面 | 讲解内容 | 建议时间 |
-|---|---|---|
-| `index.html` | 公钥 → 欧几里得算法 → 共享素因子 → 余因子 → 私钥恢复连接点 | 约 1 分钟 |
-| `batch-gcd.html` | 乘积树向上合并、奇数叶子携带、平方模数余数树向下传播、整除与最终 GCD | 约 1 分 30 秒 |
-| `edge-cases.html` | 重复模数映射、三角共享结构、全重叠回退、未解决状态及验证范围 | 约 1 分钟 |
+第 6 页点击 **Run Python pipeline**，再点 **Run pipeline**。窗口展示真实命令、stdout、输入摘要、逐阶段结果和耗时；**Save run log** 可下载运行记录。执行流程：
 
-## 演讲操作
+1. 校验归档的公开输入及实际 2048-bit 位长。
+2. 在新进程中调用原有 `rsa_lab scan`（通过适配层调用 A 的 `rsa_audit`）。
+3. 在新进程中调用原有 `rsa_lab recover`，恢复私钥并解密 OAEP。
+4. 攻击后才对比归档的已验证状态及明文，验证因子乘积。
+5. 重新扫描已保存的替换密钥集合。
 
-- 点击 `Next step` 或按右方向键逐步前进；左方向键返回。
-- 空格前进，`P` 自动播放／暂停，`Home` 重启当前页。
-- `1 / 2 / 3` 切换页面；`PageDown / PageUp` 翻页。
-- `N` 展开／收起中文讲解提示；默认收起，适合投影。
-- `F` 或 `Full screen` 进入全屏，`Esc` 退出。
-- 第三页可关闭 `Enable pairwise fallback`，比较预算为 0 时的未解决结果。
-- 自动播放在当前页最后一步停止，切换到后台也会暂停。
-- 页面尊重系统减少动画设置；仍可逐步查看全部信息。
+这是**现场重算并对照归档**，不是重播日志，也不重新生成密钥、不重跑完整独立真值评估或性能实验。结果写入临时目录，不修改归档，不保存私钥文件。失败会显示错误，不伪装成成功。执行请求不接受任意命令或文件路径，同一时刻只允许一次运行。
 
-步骤切换保留原有图形，只更新变化的内容。数字和说明交叉渐变，树的节点保持在原位，连线颜色缓慢变化，数据点沿路径流动后淡出。新结果分批出现；连续点击会取消上一段过渡并进入最新步骤，不会被旧动画回调覆盖。
+本机依赖已经安装；其他机器使用 Python 3.10+ 并安装 `requirements.txt`。完整实验仍可使用 `run_demo.cmd`。普通 `python -m http.server` 不能提供执行接口。
 
-提示：正式演讲优先手动逐步播放，每一步停下来解释当前数据变化。自动播放适合排练。浏览器全屏也可使用 F11。
+## 离线与动画
 
-## 与真实实现的关系
+直接打开 `final.html` 可以离线展示全部八页、数学动画和归档实验结果。只有实际 Python 执行需要本地演示服务。
 
-动画中的小整数使用 JavaScript BigInt 实时计算，演示与 Python 检测器相同的数学流程。它们是教学算术，并非浏览器现场执行 2048-bit Python 扫描。
+- 总页码按钮、Previous / Next 切换八页。
+- 动画内 Next step / Previous 控制数学步骤；方向键、空格同样有效。
+- 动画获得焦点后，PageDown / PageUp 切换总展示并同步页码；1 / 2 / 3 选择三页数学动画。
+- P 自动播放或暂停，Home 重置当前数学动画；自动播放到最后一步停止，离开动画页暂停。
+- Full screen 为整组页面全屏。系统减少动画设置仍受支持。
+- 第 4 页开关用于比较 full-overlap 的回退与 unresolved，右侧正式核验证据不随教学开关变化。
 
-验证区数据来自 `tests/fixtures/rsa2048_public.jsonl` 和成功的 Python 测试记录：16 条记录、14 个不同 2048-bit 模数、6 个成功分解的不同模数、4 个全重叠候选项被拆分。OAEP 解密验证已在 Python 集成测试完成。
+步骤切换复用图形元素，数字交叉渐变、数据点沿树路径移动；快速切换会取消旧过渡。第 6 页可按阶段直接查看记录结果，并有独立的现场执行窗口。补充窗口包含私钥公式、对照实验、分阶段耗时、弱素数池和共享因子图。
 
-第一页面的 `e=17` 只服务于小整数演示；真实测试样本采用 `e=65537`。A 实现提供因子与检测状态，密钥恢复连接点用于说明交接给 B 的输入。
+## 数据口径
 
-## 检查和更新
+正式展示统一为 102 条记录、100 个不同的实际 2048-bit 模数、5 个恢复密钥和 6 条核对明文。两条记录重复，其中一条对应脆弱密钥。三个全重叠候选使用九次回退 GCD。换钥后检测到零个共享因子，原完整实验的六条新消息通过合法 OAEP round trip。
 
-在仓库根目录执行：
+性能图使用同输入、同 GMP 后端、每条件三次运行：1000 个模数约 32.8 倍；3000 个模数的 pairwise 三次超过 45 秒，不能计算完整实测速比。现场单次耗时独立显示，不替换历史图表。
+
+独立 A 练习页 `index.html`、`batch-gcd.html`、`edge-cases.html` 保留旧小型 fixture 证据及可选讲解提示。正式 `final.html` 嵌入时隐藏提示，并使用整组最终实验数据。
+
+## 维护与检查
 
 ```powershell
-node --check presentation/assets/slides.js
+node --check presentation/assets/final.js
+node --check presentation/assets/live.js
 node tests/presentation_math.test.cjs
-.\.venv\Scripts\python.exe presentation/export_validation.py
+node tests/presentation_interactions.test.cjs
+node tests/presentation_live.test.cjs
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p test_presentation_server.py -v
 ```
 
-导出工具检查固定样本哈希和恢复集合，并读取 `results/unittest.txt` 中已有的成功测试记录。修改核心实现或样本后，应先重新运行 Python 测试并保存该日志，再更新验证区。
-
-如需本地服务预览：
-
-```powershell
-python -m http.server 8765 --bind 127.0.0.1 --directory presentation
-```
-
-然后打开 `http://127.0.0.1:8765/`。正式展示不依赖本地服务，直接打开文件即可。
-
-数学解释与英文完整讲稿见 `docs/A_PRESENTATION.md`。参考算法：Heninger et al., *Mining Your Ps and Qs*, USENIX Security 2012, §3.3。
+网页归档数据由 `scripts/export_showcase.py` 生成。新增正式讲稿是 `docs/FINAL_SPEECH.md`；旧 `docs/PRESENTATION.md` 是历史自动生成稿，不是本版配套讲稿。

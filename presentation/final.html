@@ -1,76 +1,71 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RSA Shared-Prime Audit | SC6104</title>
-<link rel="stylesheet" href="assets/final.css">
-<script src="assets/final-data.js" defer></script><script src="assets/final.js" defer></script>
-</head><body>
-<header class="bar"><span>SC6104 / RSA SHARED-PRIME AUDIT</span><span id="time"></span><button id="fullscreen" type="button">Full screen</button></header>
-<main>
-<section class="slide cover" data-time="0:00–0:45 / B">
-<p class="eyebrow">RSA KEY GENERATION</p>
-<h1>Shared prime factors.<br>Recoverable private keys.</h1>
-<p class="lead">A public relationship can expose a 2048-bit RSA key.</p>
-<p class="cover-detail">Batch detection and verified RSA-OAEP decryption</p>
-<p class="footnote">Controlled local experiments. Algorithm reference: Heninger et al., USENIX Security 2012, §3.3.</p>
-</section>
-<section class="slide frame-slide" data-time="0:45–1:45 / A" hidden><iframe src="embed/index.html" title="Shared-prime attack and key recovery"></iframe></section>
-<section class="slide frame-slide" data-time="1:45–2:45 / A" hidden><iframe src="embed/batch-gcd.html" title="Product tree and remainder tree"></iframe></section>
-<section class="slide frame-slide" data-time="2:45–3:15 / A" hidden><iframe src="embed/edge-cases.html" title="Duplicates and full-overlap fallback"></iframe></section>
-<section class="slide" data-time="3:15–4:30 / B" hidden>
-<p class="eyebrow">MEASURED PERFORMANCE</p><h2 id="performance-title">Batch GCD at 3,000 moduli</h2>
-<div class="performance"><figure><img src="../artifacts/figures/scan_times_presentation.png" alt="Median scan times and observed min/max at 100, 300, 1000 and 3000 distinct 2048-bit moduli"></figure>
-<div><table class="timing-table"><thead><tr><th>Moduli</th><th>Pairwise</th><th>Batch</th></tr></thead><tbody id="timings"></tbody></table>
-<p class="finding" id="speedup"></p><p class="small" id="timeout-note"></p><button type="button" data-dialog="stages-dialog">Stage breakdown</button></div></div>
-<p class="footnote">Same saved inputs and GMP backend, 3 runs per condition. Median seconds with observed min/max. Native scanner time includes preprocessing, algorithm and fallback. Key generation and decryption are excluded.</p>
-</section>
-<section class="slide" data-time="4:30–6:15 / B operates, A explains" hidden>
-<p class="eyebrow">PUBLIC INPUT ATTACK</p><h2 id="attack-title">102 records. 100 distinct RSA moduli.</h2>
-<p class="subtitle">Saved experimental evidence. Run <code>run_demo.cmd</code> for the live Python attack.</p>
-<div class="demo-layout"><div><ol class="attack-steps">
-<li><b>Public inputs</b><span>Moduli, exponents and OAEP ciphertexts</span></li>
-<li><b>Shared-factor detection</b><span id="fallback-detail">Batch GCD with full-overlap fallback</span></li>
-<li><b>Private-key recovery</b><span>Validated factors, modular inverse and OAEP</span></li>
-<li><b>Independent verification</b><span>Ground truth enters after the attack</span></li>
-</ol><div class="actions"><button id="reveal" class="primary" type="button">Show detection</button><button id="reset" type="button">Restart</button></div></div>
-<div class="demo-evidence" aria-live="polite"><p class="evidence-label" id="evidence-label">PUBLIC INPUT</p>
-<p class="result-number" id="demo-number">100<span>distinct 2048-bit moduli</span></p>
-<p class="evidence-copy" id="demo-detail">Two duplicate records preserve their original identities.</p>
-<pre id="plaintext" hidden></pre><p class="verification" id="verification" hidden></p></div></div>
-<div class="support-links"><button type="button" data-dialog="recovery-dialog">Key reconstruction</button><button type="button" data-dialog="controls-dialog">Validation controls</button><span>SHA-256 / MGF1-SHA-256</span></div>
-</section>
-<section class="slide" data-time="6:15–7:15 / A" hidden>
-<p class="eyebrow">KEY REPLACEMENT</p><h2>Fresh keys remove the observed shared factors</h2>
-<div class="repair-comparison"><div><span>Before replacement</span><strong id="before">5</strong><p>factorable distinct moduli</p></div><div><span>After rescanning</span><strong id="after">0</strong><p>shared factors detected</p></div></div>
-<p class="lead" id="roundtrip"></p><p class="footnote">This checks one input collection and one weakness. Previously exposed keys and messages remain compromised.</p>
-</section>
-<section class="slide" data-time="7:15–8:00 / B" hidden>
-<p class="eyebrow">CONCLUSION</p><h2>Key length cannot compensate for shared primes</h2>
-<p class="lead">RSA needs reliable, independent prime generation.</p>
-<div class="contribution"><p><b>A</b>Detection engine, tree algorithms, edge cases and animations</p><p><b>B</b>Datasets, key recovery, OAEP validation and measured experiments</p></div>
-<div class="support-links"><button type="button" data-dialog="pool-dialog">Weak-prime pool experiment</button><button type="button" data-dialog="controls-dialog">Validation evidence</button></div>
-<p class="footnote">Source, fixed public samples, measured CSV records and replay instructions are included. <a href="../docs/PRESENTATION.md" target="_blank">English speaking notes</a></p>
-</section></main>
-<footer class="navigation"><button id="previous" type="button">Previous</button><div id="pages" aria-label="Slide navigation"></div><span id="page-label"></span><button id="next" class="primary" type="button">Next</button></footer>
-<dialog id="stages-dialog"><div class="dialog-top"><h2>Where batch GCD spends its time</h2><button type="button" data-close>Close</button></div>
-<img class="dialog-chart" src="../artifacts/figures/batch_stages.png" alt="Batch scan stage times">
-<p class="dialog-finding" id="dominant-stage"></p><p class="small">Component medians are calculated separately. Their sum may differ from the median total. Fallback cost remains part of the scan.</p></dialog>
-<dialog id="recovery-dialog"><div class="dialog-top"><h2>B's private-key reconstruction</h2><button type="button" data-close>Close</button></div>
-<div class="reconstruction"><pre><code>p = factor
-q = n // p
-lambda_n = lcm(p - 1, q - 1)
-d = pow(e, -1, lambda_n)
-key = RSA.construct((n, e, d, p, q),
-                    consistency_check=True)</code></pre><div><p id="reconstruction-key"></p><dl id="reconstruction-checks"></dl></div></div>
-<p class="small">The factor comes from the public-key scan. The recovery module checks divisibility, distinct primes and key consistency before decrypting OAEP.</p></dialog>
-<dialog id="controls-dialog"><div class="dialog-top"><h2>Positive, negative and coverage controls</h2><button type="button" data-close>Close</button></div>
-<p class="small">Both algorithms run on every case. All moduli below are actually 2048 bits.</p>
-<table class="controls-table"><thead><tr><th>Input collection</th><th>Records / moduli</th><th>Factorable</th><th>Verified messages</th></tr></thead><tbody id="control-rows"></tbody></table>
-<p class="dialog-finding" id="controls-status"></p><p class="small">The isolated target is a key from the weak demo, presented without its related public keys. No shared factor can be found from this one-key collection.</p></dialog>
-<dialog id="pool-dialog"><div class="dialog-top"><h2>Smaller prime pools expose more keys</h2><button type="button" data-close>Close</button></div>
-<div class="pool-layout"><img class="dialog-chart" src="../artifacts/figures/weak_pool.png" alt="Measured recoverable fraction at prime pool sizes 4, 16 and 64">
-<table><thead><tr><th>Pool size</th><th>Recoverable</th></tr></thead><tbody id="pool-rows"></tbody></table></div>
-<p class="small">60 distinct RSA moduli per dataset, 3 datasets per pool size. One factor comes from a limited pool, the other is freshly generated. This is a controlled model of prime reuse.</p></dialog>
-<noscript>Enable JavaScript to view the slides. English notes are in docs/PRESENTATION.md.</noscript>
-</body></html>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
+  <title>RSA Shared-Prime Audit | SC6104</title>
+  <link rel="stylesheet" href="assets/final.css?v=20261010-final2">
+  <script src="assets/final-data.js" defer></script><script src="assets/final.js?v=20261010-final2" defer></script><script src="assets/live.js?v=20261010-final2" defer></script>
+</head>
+<body>
+<header class="bar"><span class="brand"><span class="brand-mark" aria-hidden="true"></span>SC6104 <span class="brand-divider">/</span> RSA SHARED-PRIME AUDIT</span><span id="section-label" class="section-label">Research goal</span><button id="fullscreen" type="button">Full screen</button></header>
+<main id="presentation">
+  <section class="slide cover" data-title="Research goal" aria-labelledby="cover-title">
+    <div class="cover-copy"><p class="eyebrow">RSA KEY GENERATION</p><h1 id="cover-title">Shared primes.<br>Exposed private keys.</h1><p class="lead">A relationship between public keys can expose a <strong>2048-bit RSA key.</strong></p><p class="cover-detail">Batch detection, private-key recovery and verified RSA-OAEP decryption.</p>
+      <div class="cover-metrics" aria-label="Verified experiment results"><div><strong id="cover-moduli">100</strong><span>distinct public moduli</span></div><div><strong id="cover-recovered">5</strong><span>private keys recovered</span></div><div><strong id="cover-messages">6</strong><span>messages verified</span></div></div>
+    </div>
+    <div class="cover-map"><p class="panel-label">THE EXPERIMENT</p><ol class="workflow">
+      <li><span class="workflow-index">01</span><div><b>Public keys + ciphertexts</b><span>Only public inputs enter the attack</span></div></li>
+      <li><span class="workflow-index">02</span><div><b>Batch GCD</b><span>Shared factors reveal vulnerable keys</span></div></li>
+      <li><span class="workflow-index">03</span><div><b>Recover and decrypt</b><span>Reconstruct private keys; verify OAEP plaintexts</span></div></li>
+      <li><span class="workflow-index">04</span><div><b>Replace and rescan</b><span>Check the repaired key collection</span></div></li>
+    </ol><p class="scope-label">Controlled local experiments · actual 2048-bit moduli</p></div>
+    <p class="footnote cover-reference">Algorithm reference: Heninger et al., <em>Mining Your Ps and Qs</em>, USENIX Security 2012, §3.3.</p>
+  </section>
+  <section class="slide frame-slide" data-title="Shared-prime attack" hidden><iframe src="embed/index.html?v=20261010-final2" title="Shared-prime attack and key recovery" allow="fullscreen"></iframe></section>
+  <section class="slide frame-slide" data-title="Batch GCD" hidden><iframe src="embed/batch-gcd.html?v=20261010-final2" title="Product tree and remainder tree" allow="fullscreen"></iframe></section>
+  <section class="slide frame-slide" data-title="Correctness and edge cases" hidden><iframe src="embed/edge-cases.html?v=20261010-final2" title="Duplicates and full-overlap fallback" allow="fullscreen"></iframe></section>
+
+  <section class="slide" data-title="Measured performance" aria-labelledby="performance-title" hidden>
+    <p class="eyebrow">MEASURED PERFORMANCE</p><h2 id="performance-title">3,000 moduli scanned in 0.780 seconds</h2>
+    <div class="experiment-tags"><span>2048-bit RSA</span><span id="repeats-label">3 runs per condition</span><span>Same inputs · GMP backend</span><span>Median scan time</span></div>
+    <div class="performance"><figure class="chart-panel"><img src="../artifacts/figures/scan_times_presentation.svg" alt="Measured median scan times with observed minimum and maximum at 100, 300, 1000 and 3000 RSA moduli"><figcaption>Observed min–max ranges across repeated runs.</figcaption></figure>
+      <div class="performance-results"><table class="timing-table"><caption class="sr-only">Median scan time in seconds</caption><thead><tr><th scope="col">Moduli</th><th scope="col">Pairwise</th><th scope="col">Batch</th></tr></thead><tbody id="timings"></tbody></table><p class="finding" id="speedup"></p><p class="small" id="timeout-note"></p><button type="button" data-dialog="stages-dialog">Stage breakdown</button></div>
+    </div><p class="footnote">Scanner time includes validation, deduplication, arithmetic and fallback. Input/output, key generation, adapter conversion and decryption are excluded. A timed-out worker has no completed scan time.</p>
+  </section>
+
+  <section class="slide" data-title="Public-input attack" aria-labelledby="attack-title" hidden>
+    <div class="title-line"><p class="eyebrow">FROM PUBLIC INPUTS TO VERIFIED RECOVERY</p><span class="evidence-badge">Recorded experiment</span></div><h2 id="attack-title">102 records. 100 distinct RSA moduli.</h2><p class="subtitle">Two duplicate records are retained. Original factors and private keys stay outside the attack.</p>
+    <div class="demo-layout"><div><ol class="attack-steps" aria-label="Recovery stages">
+      <li><button type="button" data-demo-step="0"><span class="stage-index">01</span><span><b>Public inputs</b><small>Moduli, exponents and OAEP ciphertexts</small></span></button></li>
+      <li><button type="button" data-demo-step="1"><span class="stage-index">02</span><span><b>Shared-factor detection</b><small id="fallback-detail">Batch GCD and full-overlap fallback</small></span></button></li>
+      <li><button type="button" data-demo-step="2"><span class="stage-index">03</span><span><b>Private-key recovery</b><small>Validated factors, modular inverse and OAEP</small></span></button></li>
+      <li><button type="button" data-demo-step="3"><span class="stage-index">04</span><span><b>Independent verification</b><small>Ground truth enters after the attack</small></span></button></li>
+    </ol><div class="actions"><button id="reveal" class="primary" type="button">Show detection</button><button id="reset" type="button">Restart</button></div></div>
+      <div class="demo-evidence" aria-live="polite" aria-atomic="true"><p class="panel-label" id="evidence-label">PUBLIC INPUT</p><p class="result-number" id="demo-number">100<span>distinct 2048-bit moduli</span></p><p class="evidence-copy" id="demo-detail"></p><div id="public-boundary" class="public-boundary"><span class="input-chip">Public (N, e)</span><span class="input-chip">OAEP ciphertexts</span><p>No original private key is supplied.</p></div><pre id="plaintext" hidden></pre><div id="verification" class="verification" hidden></div></div>
+    </div><div class="support-links"><button class="primary" type="button" data-dialog="live-dialog" id="open-live">Run Python pipeline</button><button type="button" data-dialog="recovery-dialog">Key reconstruction</button><button type="button" data-dialog="controls-dialog">Validation controls</button><span>OAEP · SHA-256 · MGF1-SHA-256</span></div>
+  </section>
+
+  <section class="slide" data-title="Replacement and limits" aria-labelledby="repair-title" hidden>
+    <p class="eyebrow">KEY REPLACEMENT</p><h2 id="repair-title">Fresh keys remove the observed shared factors</h2>
+    <div class="repair-comparison"><div class="repair-state"><span class="panel-label">BEFORE REPLACEMENT</span><strong id="before">5</strong><p>factorable distinct moduli</p></div><div class="repair-arrow" aria-hidden="true">→</div><div class="repair-state repaired"><span class="panel-label">AFTER RESCANNING</span><strong id="after">0</strong><p>shared factors detected</p></div></div>
+    <p class="roundtrip" id="roundtrip"></p><div class="limits-grid"><article><h3>Collection-dependent</h3><p>An isolated weak target exposes no shared factor without a related public key.</p></article><article><h3>One weakness checked</h3><p>No shared factor found does not establish security against other attacks.</p></article><article><h3>Old exposure remains</h3><p>Replacing a key cannot restore the secrecy of messages already compromised.</p></article></div>
+  </section>
+
+  <section class="slide" data-title="Results and contributions" aria-labelledby="conclusion-title" hidden>
+    <p class="eyebrow">RESULTS &amp; CONTRIBUTIONS</p><h2 id="conclusion-title">Key length cannot compensate for shared primes</h2><p class="subtitle">Reliable, independent prime generation is essential to RSA security.</p>
+    <div class="conclusion-grid"><div class="contributions"><article><span class="contribution-index">01</span><div><h3>Detection engine</h3><p>Pairwise baseline, product and remainder trees, deduplication, full-overlap fallback and explicit unresolved results.</p></div></article><article><span class="contribution-index">02</span><div><h3>Recovery and evaluation</h3><p>2048-bit datasets, private-key reconstruction, OAEP checks, separate ground truth and repeated measurements.</p></div></article><div class="validation-strip"><strong id="control-count">10</strong><span>control scans passed</span><strong id="negative-count">2</strong><span>OAEP negative checks passed</span></div></div>
+      <div class="pool-summary"><p class="panel-label">WEAK-PRIME POOL EXPERIMENT</p><h3>Smaller pools expose more keys</h3><div id="pool-bars"></div><p class="small">60 keys per dataset · 3 datasets per pool size.<br>Median recoverable fraction in the controlled model.</p></div>
+    </div><div class="support-links"><button type="button" data-dialog="pool-dialog">Pool experiment</button><button type="button" data-dialog="graph-dialog">Shared-factor graph</button><button type="button" data-dialog="controls-dialog">Validation evidence</button><span>Also implemented: RSA PEM public-key import</span></div><p class="footnote">Public samples, measured CSV records, configurations, environment details and replay tooling accompany the implementation.</p>
+  </section>
+</main>
+<footer class="navigation" aria-label="Presentation navigation"><button id="previous" type="button">Previous</button><div id="pages" aria-label="Slide navigation"></div><span id="page-label" aria-live="polite"></span><button id="next" class="primary" type="button">Next</button></footer>
+
+<dialog id="stages-dialog" aria-labelledby="stages-title"><div class="dialog-top"><h2 id="stages-title">Where batch GCD spends its time</h2><button type="button" data-close>Close</button></div><img class="dialog-chart" src="../artifacts/figures/batch_stages.png" alt="Measured batch scan stage times"><p class="dialog-finding" id="dominant-stage"></p><p class="small">Stage medians are calculated separately; their sum may differ from the median total. Fallback remains part of the scan.</p></dialog>
+<dialog id="recovery-dialog" aria-labelledby="recovery-title"><div class="dialog-top"><h2 id="recovery-title">From one factor to a usable private key</h2><button type="button" data-close>Close</button></div><div class="reconstruction"><ol class="recovery-math"><li><span>Complete the factorization</span><b>q = N / p</b><small>Verify p × q = N and distinct prime factors.</small></li><li><span>Compute the group exponent</span><b>λ(N) = lcm(p − 1, q − 1)</b><small>Require gcd(e, λ(N)) = 1.</small></li><li><span>Recover the private exponent</span><b>d = e<sup>−1</sup> mod λ(N)</b><small>Check key consistency before OAEP decryption.</small></li></ol><div class="reconstruction-evidence"><p class="panel-label" id="reconstruction-key"></p><dl id="reconstruction-checks"></dl></div></div><p class="dialog-finding">A recovered private key permits ordinary OAEP decryption.</p><p class="small">The weakness lies in shared key factors. OAEP itself is not broken by this experiment.</p></dialog>
+<dialog id="controls-dialog" aria-labelledby="controls-title"><div class="dialog-top"><h2 id="controls-title">Positive, negative and coverage controls</h2><button type="button" data-close>Close</button></div><p class="small">Both algorithms run on every case. All moduli are actually 2048 bits.</p><div class="table-scroll"><table class="controls-table"><thead><tr><th scope="col">Input collection</th><th scope="col">Records / moduli</th><th scope="col">Factorable</th><th scope="col">Verified messages</th></tr></thead><tbody id="control-rows"></tbody></table></div><p class="dialog-finding" id="controls-status"></p><p class="small">The isolated target comes from the weak demo, with its related public keys removed. The one-key collection reveals no shared factor.</p></dialog>
+<dialog id="pool-dialog" aria-labelledby="pool-title"><div class="dialog-top"><h2 id="pool-title">Prime reuse increases recoverability</h2><button type="button" data-close>Close</button></div><div class="pool-layout"><img class="dialog-chart" src="../artifacts/figures/weak_pool.png" alt="Measured recoverable fraction for prime pools of size 4, 16 and 64"><table><thead><tr><th scope="col">Pool size</th><th scope="col">Recoverable</th></tr></thead><tbody id="pool-rows"></tbody></table></div><p class="small">60 distinct moduli per dataset, 3 datasets per pool size. One factor comes from a limited pool; the other is freshly generated. This models prime reuse, not an entire device RNG failure.</p></dialog>
+<dialog id="graph-dialog" aria-labelledby="graph-title"><div class="dialog-top"><h2 id="graph-title">Shared-factor relationships in the demo</h2><button type="button" data-close>Close</button></div><img class="dialog-chart" src="../artifacts/figures/shared_factors.png" alt="Public-key shared-factor graph for the demo collection"><p class="dialog-finding">One shared-prime pair and one full-overlap triangle.</p><p class="small">The graph is derived from public moduli. Duplicate records are collapsed before comparing different moduli.</p></dialog>
+<dialog id="live-dialog" class="live-dialog" aria-labelledby="live-title"><div class="dialog-top"><div><p class="eyebrow">ACTUAL PYTHON EXECUTION</p><h2 id="live-title">Public inputs → recovered plaintexts</h2></div><button type="button" data-close>Close</button></div><p class="small">Runs the repository’s scanner and OAEP recovery in separate Python processes, then compares with the archived verified result and rescans the saved replacement keys.</p><div class="live-toolbar"><button type="button" class="primary" id="live-run" disabled>Run pipeline</button><button type="button" id="live-download" disabled>Save run log</button><span id="live-status" role="status">Checking local runner…</span></div><ol class="live-stages" aria-label="Live execution stages"><li data-live-stage="0">Public input</li><li data-live-stage="1">Batch GCD</li><li data-live-stage="2">OAEP recovery</li><li data-live-stage="3">Result comparison</li><li data-live-stage="4">Replacement rescan</li></ol><pre id="live-output" class="terminal" tabindex="0" aria-label="Actual command output">No run started.</pre><div id="live-result" class="live-result" hidden></div><p class="small">The output below is produced on this machine. One live run does not replace the repeated performance experiment.</p></dialog>
+<noscript><p class="noscript">JavaScript is required for the interactive diagrams and slide navigation.</p></noscript>
+</body>
+</html>

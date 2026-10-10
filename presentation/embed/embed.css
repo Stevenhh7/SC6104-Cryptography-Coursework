@@ -1,5 +1,5 @@
 /* Reuse A's animation assets without changing the standalone presentation. */
-.topbar,.footer{display:none}
+.topbar,.footer,.implementation,.heading>.eyebrow,.utility{display:none}
 #notes-button,#notes{display:none!important}
 .deck{padding:12px 32px 4px}
 .heading{margin:8px 0 16px}
