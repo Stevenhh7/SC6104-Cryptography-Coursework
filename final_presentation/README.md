@@ -4,25 +4,28 @@
 
 ## 本机启动
 
-双击 **`run_presentation.cmd`**，保持服务运行，打开：
+双击 **`run_presentation.cmd`**，保持服务运行。脚本会自动打开带版本号的最新十页展示，默认地址为：
 
 **http://127.0.0.1:8765/presentation/final.html**
 
-启动器优先使用本目录的 `.venv`，否则复用上一级课程项目的 `.venv`。本机依赖已安装。端口被占用时，在本目录执行 `run_presentation.cmd --port 8766`，并使用对应网址。
+启动器优先使用本目录的 `.venv`，否则复用上一级课程项目的 `.venv`。本机依赖已安装。端口被占用时自动尝试后续端口，以启动窗口打印的地址和自动打开的页面为准；也可指定 `run_presentation.cmd --port 8766`。仅启动服务时加 `--no-browser`。
+
+服务启动时显示实际演示目录、`10 slides` 和当前文件版本，检查页数后才启动。HTML、脚本和嵌入页禁止缓存，避免沿用以前的八页版本。截图中的 `/favicon.ico` 与 Chrome 开发工具配置属于浏览器附带请求，服务现在正常返回 204；网页使用随包提供的 SVG 图标。
 
 第 6 页点击 **Run Python pipeline → Run pipeline**，实际执行批量扫描、私钥恢复与 OAEP 解密，核对归档结果，再重扫已保存的换钥集合。**Save run log** 保存当次真实输出。
 
-直接打开根目录的 **`final.html`** 或 **`presentation/final.html`**，可离线展示八页和动画；实际 Python 执行需要上面的本地服务。
+直接打开根目录的 **`final.html`** 或 **`presentation/final.html`**，可离线展示十页和动画；实际 Python 执行需要上面的本地服务。第 9 页为 A 的 Batch GCD 核心实现，第 10 页为 B 的私钥重建与验证，均保留源码和补充讲解窗口。
 
 ## 文件位置
 
 | 路径 | 内容 |
 |---|---|
 | `final.html` | 双击进入正式展示的快捷入口 |
-| `presentation/final.html` | 八页正式展示网页 |
+| `presentation/final.html` | 十页正式展示网页，A/B 核心代码位于第 9、10 页 |
 | `presentation/assets/`、`presentation/embed/` | 样式、动画、脚本及展示数据 |
 | `docs/FINAL_SPEECH.md` | 八分钟讲稿、两人分工、现场操作及问答 |
 | `docs/A_PRESENTATION.md`、`docs/B_CODE_GUIDE.md` | 各自实现的理解材料 |
+| `review_slides/` | A/B 独立审阅页；正式展示已嵌入为第 9、10 页。A 页附逐行讲解与答辩稿 |
 | `artifacts/figures/` | 性能图、阶段耗时、弱素数池与共享因子图 |
 | `artifacts/demo/` | 2048-bit 公钥、OAEP 密文、恢复证据和换钥集合 |
 | `artifacts/benchmark/`、`artifacts/pool/`、`artifacts/controls/` | 原始实验记录、环境、配置和核验结果 |

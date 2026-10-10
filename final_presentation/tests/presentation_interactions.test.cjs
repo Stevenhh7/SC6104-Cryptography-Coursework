@@ -1,5 +1,5 @@
 // DOM-independent checks of the actual presentation event handlers.
-// Browser layout and transitions are checked separately in the live preview.
+// These checks exercise event handlers; they do not verify browser layout.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -71,9 +71,14 @@ const standalone=animation('attack',false);standalone.key('PageDown');
 assert.equal(standalone.window.location.href,'batch-gcd.html');
 checks.push('standalone page navigation preserved');
 const deck=environment('');
-const slides=Array.from({length:8},(_,index)=>{
-  const slide=node();slide.dataset.title=`title-${index}`;
-  const frame=index>=1&&index<=3?{...node(),contentWindow:{messages:[],postMessage(data){this.messages.push(data);}}}:null;
+const deckMarkup=fs.readFileSync(path.join(root,'presentation/final.html'),'utf8');
+const slideTitles=[...deckMarkup.matchAll(/<section class="slide[^\"]*" data-title="([^\"]+)"/g)].map(match=>match[1]);
+assert.equal(slideTitles.length,10);
+assert.match(slideTitles[8],/^A .*Batch GCD implementation$/);
+assert.match(slideTitles[9],/^B .*RSA private-key recovery$/);
+const slides=slideTitles.map((title,index)=>{
+  const slide=node();slide.dataset.title=title;
+  const frame=(index>=1&&index<=3)||index>=8?{...node(),contentWindow:{messages:[],postMessage(data){this.messages.push(data);}}}:null;
   slide.querySelector=()=>frame;return slide;
 });
 deck.document.querySelectorAll=selector=>selector==='.slide'?slides:[];
@@ -84,20 +89,46 @@ deck.document.querySelectorAll=selector=>selector==='.slide'?slides:selector==='
 deck.load('final-data.js');
 deck.load('final.js');
 deck.nodes.get('pages').children[1].handlers.click();
-assert.equal(deck.nodes.get('page-label').textContent,'2 / 8');
+assert.equal(deck.nodes.get('page-label').textContent,'2 / 10');
 const attackWindow=slides[1].querySelector().contentWindow;
 deck.window.handlers.message({source:attackWindow,origin:'http://localhost',data:{type:'rsa-presentation:turn',delta:1}});
-assert.equal(deck.nodes.get('page-label').textContent,'3 / 8');
+assert.equal(deck.nodes.get('page-label').textContent,'3 / 10');
 assert.equal(attackWindow.messages.at(-1).active,false);
 assert.equal(slides[2].querySelector().contentWindow.messages.at(-1).active,true);
 // Inactive iframe messages must not change the current deck page.
 deck.window.handlers.message({source:attackWindow,origin:'http://localhost',data:{type:'rsa-presentation:turn',delta:1}});
-assert.equal(deck.nodes.get('page-label').textContent,'3 / 8');
+assert.equal(deck.nodes.get('page-label').textContent,'3 / 10');
 deck.window.handlers.message({source:slides[2].querySelector().contentWindow,origin:'http://localhost',data:{type:'rsa-presentation:select',page:3}});
-assert.equal(deck.nodes.get('page-label').textContent,'4 / 8');
+assert.equal(deck.nodes.get('page-label').textContent,'4 / 10');
 deck.window.handlers.message({source:slides[3].querySelector().contentWindow,origin:'http://localhost',data:{type:'rsa-presentation:turn',delta:1}});
-assert.equal(deck.nodes.get('page-label').textContent,'5 / 8');
+assert.equal(deck.nodes.get('page-label').textContent,'5 / 10');
 checks.push('deck page labels, active-frame navigation, pause dispatch and edge-page exit');
+assert.equal(deck.nodes.get('pages').children.length,10);
+deck.nodes.get('pages').children[7].handlers.click();
+deck.click('next');
+assert.equal(deck.nodes.get('page-label').textContent,'9 / 10');
+const aWindow=slides[8].querySelector().contentWindow;
+const bWindow=slides[9].querySelector().contentWindow;
+deck.window.handlers.message({source:aWindow,origin:'https://example.org',data:{type:'rsa-presentation:turn',delta:1}});
+assert.equal(deck.nodes.get('page-label').textContent,'9 / 10');
+deck.window.handlers.message({source:aWindow,origin:'http://localhost',data:{type:'rsa-presentation:turn',delta:1}});
+assert.equal(deck.nodes.get('page-label').textContent,'10 / 10');
+assert.equal(deck.nodes.get('next').disabled,true);
+assert.equal(deck.nodes.get('section-label').textContent,slideTitles[9]);
+assert.equal(deck.nodes.get('pages').children[9].attributes['aria-current'],'page');
+assert.equal(aWindow.messages.at(-1).active,false);
+assert.equal(bWindow.messages.at(-1).active,true);
+deck.window.handlers.message({source:aWindow,origin:'http://localhost',data:{type:'rsa-presentation:turn',delta:-1}});
+assert.equal(deck.nodes.get('page-label').textContent,'10 / 10');
+deck.window.handlers.message({source:bWindow,origin:'http://localhost',data:{type:'rsa-presentation:turn',delta:1}});
+assert.equal(deck.nodes.get('page-label').textContent,'10 / 10');
+deck.window.handlers.message({source:bWindow,origin:'http://localhost',data:{type:'rsa-presentation:turn',delta:-1}});
+assert.equal(deck.nodes.get('page-label').textContent,'9 / 10');
+deck.key('PageUp');assert.equal(deck.nodes.get('page-label').textContent,'8 / 10');
+deck.nodes.get('pages').children[0].handlers.click();
+deck.click('previous');assert.equal(deck.nodes.get('page-label').textContent,'1 / 10');
+assert.equal(deck.nodes.get('previous').disabled,true);
+checks.push('slides 9 and 10: numbering, A/B order, current-frame turns, origin filtering and deck boundaries');
 assert.equal(deck.nodes.get('timings').children.length,4);
 assert.match(deck.nodes.get('speedup').textContent,/32.8/);
 assert.match(deck.nodes.get('timeout-note').textContent,/No speedup/);

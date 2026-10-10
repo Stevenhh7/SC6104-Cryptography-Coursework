@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>A | Batch GCD implementation</title><style>
+:root{font-family:"Segoe UI",Arial,sans-serif;color:#16243f;background:#f3f6fa;--blue:#235de3;--teal:#087d83;--muted:#61718a;--line:#dce4ef}
+*{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}button{font:inherit;background:white;color:inherit;border:1px solid var(--line);border-radius:7px;padding:8px 13px;cursor:pointer}button:hover{background:#eaf1ff}button:focus-visible{outline:3px solid #749eff;outline-offset:3px}
+header{height:56px;display:flex;align-items:center;gap:20px;padding:0 36px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.06em}header strong{flex:1}header span{color:var(--muted)}header button{font-size:12px}
+main{max-width:1580px;margin:auto;min-height:calc(100dvh - 56px);padding:30px 42px 24px;display:flex;flex-direction:column;justify-content:center}.eyebrow{font-size:13px;letter-spacing:.13em;color:var(--blue);font-weight:700;margin:0 0 9px}h1{font-size:clamp(32px,3.15vw,46px);line-height:1.18;letter-spacing:-.035em;margin:0 0 12px}.subtitle{font-size:19px;line-height:1.45;color:var(--muted);margin:0 0 24px}
+.content{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}.code-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:11px}.code-heading h2{font-size:23px;margin:0;line-height:1.3;letter-spacing:-.02em}.code-heading span{font-size:13px;color:var(--muted)}pre{margin:0;background:#101c30;color:#dbe9ff;border-radius:10px;padding:18px 17px;font:clamp(16px,1.38vw,21px)/1.48 Consolas,"Cascadia Code",monospace}.code-line{display:grid;grid-template-columns:28px minmax(0,1fr)}.num{color:#8396b2;user-select:none;font-size:.76em;line-height:1.95}.code-text{white-space:pre-wrap;overflow-wrap:anywhere}.core .code-line[data-line="46"],.core .code-line[data-line="51"]{color:#8fe0d5}.validation .code-line:nth-child(even){color:#adbeda}.code-note{font-size:14px;color:var(--muted);line-height:1.5;margin:12px 0 0}.key-equations{margin:15px 0 0;font:23px/1.5 Cambria,Georgia,serif;color:var(--teal)}
+.example{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 24px;margin-top:22px;border-top:1px solid var(--line);padding-top:17px}.example h2{font-size:17px;color:var(--muted);font-weight:600;margin:0}.math{font:22px/1.45 Cambria,Georgia,serif}.verified{color:var(--teal);font-weight:600}.footer{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:15px}.footnote{font-size:13px;line-height:1.55;color:var(--muted);margin:0;max-width:1150px}.footnote strong{font-weight:600;color:var(--teal)}.footer button{font-size:13px;white-space:nowrap}.actions{display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}.dialog-note{font-size:15px;line-height:1.55;color:var(--muted);margin:16px 0 0}
+dialog{width:min(1140px,94vw);max-height:92vh;border:1px solid var(--line);border-radius:13px;background:#f8faff;color:#16243f;padding:25px 29px;overflow:auto}dialog::backdrop{background:#14243eaa}.dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:25px;margin-bottom:16px}.dialog-head h2{font-size:28px;line-height:1.3;margin:0}.dialog-head p{font-size:14px;color:var(--muted);margin:8px 0 0}dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px;line-height:1.6}
+@media(min-width:1000px) and (max-height:800px){main{padding:20px 36px 18px}.eyebrow{font-size:12px;margin-bottom:8px}h1{font-size:36px;margin-bottom:10px}.subtitle{font-size:17px;margin-bottom:18px}.content{gap:23px}.code-heading{margin-bottom:9px}.code-heading h2{font-size:20px}.code-heading span{font-size:12px}pre{font-size:17px;line-height:1.4;padding:15px}.code-note{font-size:12px;margin-top:9px}.key-equations{font-size:21px;margin-top:10px}.example{margin-top:17px;padding-top:13px}.math{font-size:20px}.footer{margin-top:12px}.footnote{font-size:12px}}
+@media(max-width:999px){main{padding:26px 22px;justify-content:start}.content{grid-template-columns:1fr;gap:26px}header{padding:0 22px}header span{display:none}h1{font-size:34px}.subtitle{font-size:17px}pre{font-size:17px}.code-heading h2{font-size:21px}.example{gap:8px 18px}.footer{align-items:flex-start;flex-direction:column}.code-note{font-size:13px}.math{font-size:20px}dialog{padding:20px}dialog pre{font-size:15px}}
+@media print{header,.footer button,dialog{display:none}main{padding:20px;min-height:0}body{background:white}.content{grid-template-columns:1fr 1fr;gap:20px}pre{font-size:14px;line-height:1.45;print-color-adjust:exact}h1{font-size:30px}.subtitle{font-size:15px}.code-heading h2{font-size:18px}.code-note,.footnote{font-size:11px}.math{font-size:19px}}
+
+.validation .code-line[data-line="140"],.validation .code-line[data-line="143"],.validation .code-line[data-line="145"]{color:#8fe0d5}.trace-controls{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.trace-controls [aria-pressed="true"]{background:#e2f2f0;border-color:#86c3bd;color:var(--teal)}.trace-table-wrap{overflow-x:auto}.trace-table{width:100%;border-collapse:collapse;background:#fff;font-size:17px;margin:18px 0}.trace-table th,.trace-table td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}.trace-table th{font-size:13px;color:var(--muted);font-weight:600}.trace-table td:last-child{font-size:14px}.trace-table .found{color:var(--teal)}.trace-table .overlap{color:#94651b}.trace-formula{font:23px/1.6 Cambria,Georgia,serif;color:var(--teal);margin:10px 0}.trace-tree{font-size:17px;line-height:1.55;margin-top:16px}.trace-summary{font-size:17px;line-height:1.6;margin:16px 0 0}.source-section-title{font-size:20px;margin:22px 0 12px}.subtitle{max-width:1200px}
+@media(min-width:1000px) and (max-height:800px){main{padding-top:18px;padding-bottom:16px}pre{font-size:16px;line-height:1.35}.key-equations{font-size:20px;line-height:1.4;margin-top:10px}.subtitle{margin-bottom:16px}.code-note{line-height:1.45}.example{margin-top:15px}.footnote{font-size:11.5px}}
+@media(max-width:650px){.code-heading{align-items:start;flex-direction:column;gap:4px}.code-heading h2{font-size:20px}pre{font-size:14px;padding:14px 12px}.code-line{grid-template-columns:25px minmax(0,1fr)}.key-equations{font-size:19px}.trace-table{min-width:680px}.trace-formula{font-size:20px}dialog .trace-tree{font-size:14px}.footer .actions{width:100%}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style></head>
+<body>
+<header><strong>SC6104 / RSA SHARED-PRIME AUDIT</strong><span>A / Detection engine</span><button id="fullscreen" type="button">Full screen</button></header>
+<main aria-labelledby="slide-title">
+<p class="eyebrow">A · KEY IMPLEMENTATION</p><h1 id="slide-title">Batch GCD: tree remainders to shared factors</h1><p class="subtitle">Propagate remainders through the tree, then distinguish factors from full-overlap cases.</p>
+<div class="content">
+<section aria-labelledby="core-title"><div class="code-heading"><h2 id="core-title">Remainder propagation</h2><span>rsa_audit/trees.py</span></div>
+<pre class="core" aria-label="Original squared remainder tree body, lines 44 to 53"><code><span class="code-line" data-source="rsa_audit/trees.py" data-line="44"><span class="num">44</span><span class="code-text">    if not tree:</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="45"><span class="num">45</span><span class="code-text">        return []</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="46"><span class="num">46</span><span class="code-text">    remainders = [tree[-1][0]]  # P mod P**2 == P for P &gt; 1.</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="47"><span class="num">47</span><span class="code-text">    for children in reversed(tree[:-1]):</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="48"><span class="num">48</span><span class="code-text">        next_remainders = []</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="49"><span class="num">49</span><span class="code-text">        for index, value in enumerate(children):</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="50"><span class="num">50</span><span class="code-text">            check(&quot;remainder_tree&quot;)</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="51"><span class="num">51</span><span class="code-text">            next_remainders.append(remainders[index // 2] % (value * value))</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="52"><span class="num">52</span><span class="code-text">        remainders = next_remainders</span></span><span class="code-line" data-source="rsa_audit/trees.py" data-line="53"><span class="num">53</span><span class="code-text">    return remainders</span></span></code></pre>
+<p class="key-equations">Node invariant: remainder = P mod V<sup>2</sup></p><p class="code-note">Levels are stored leaves first. Walk downward from the root; <code>index // 2</code> selects the parent, and <code>value * value</code> is the child's squared product.</p></section>
+<section aria-labelledby="validation-title"><div class="code-heading"><h2 id="validation-title">Final GCD &amp; result states</h2><span>rsa_audit/scanner.py</span></div>
+<pre class="validation" aria-label="Original final batch GCD loop, lines 138 to 148"><code><span class="code-line" data-source="rsa_audit/scanner.py" data-line="138"><span class="num">138</span><span class="code-text">        for index, (n, remainder) in enumerate(zip(numbers, remainders)):</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="139"><span class="num">139</span><span class="code-text">            check(&quot;gcd&quot;)</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="140"><span class="num">140</span><span class="code-text">            quotient, residual = divmod(remainder, n)</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="141"><span class="num">141</span><span class="code-text">            if residual != 0:</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="142"><span class="num">142</span><span class="code-text">                raise ArithmeticError(&quot;remainder-tree invariant violated: n must divide remainder&quot;)</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="143"><span class="num">143</span><span class="code-text">            g = int(arithmetic.gcd(n, quotient))</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="144"><span class="num">144</span><span class="code-text">            operations[&quot;batch_gcd_checks&quot;] += 1</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="145"><span class="num">145</span><span class="code-text">            if g == unique_moduli[index]:</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="146"><span class="num">146</span><span class="code-text">                full_overlap.append(index)</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="147"><span class="num">147</span><span class="code-text">            elif g &gt; 1:</span></span><span class="code-line" data-source="rsa_audit/scanner.py" data-line="148"><span class="num">148</span><span class="code-text">                save_factor(index, g)</span></span></code></pre>
+<p class="key-equations">g<sub>i</sub> = gcd(N<sub>i</sub>, r<sub>i</sub> / N<sub>i</sub>)</p><p class="code-note"><code>divmod</code> verifies exact division. <code>g == N</code> queues fallback; <code>1 &lt; g &lt; N</code> saves a verified factor. <code>g == 1</code> reveals no shared factor in this collection.</p></section>
+</div>
+<section class="example" aria-label="Exact arithmetic example"><h2>Arithmetic example</h2><span class="math">P = 15 × 21 × 143 = 45045</span><span class="math">r = 45045 mod 15<sup>2</sup> = 45</span><span class="math verified">gcd(15, 45 / 15) = 3</span></section>
+<div class="footer"><p class="footnote">Exact source excerpts; inputs are already deduplicated. Full-overlap fallback follows the displayed GCD loop.<br><strong>Recorded 2048-bit experiment: 5 of 100 distinct moduli factored; 3 full-overlap candidates resolved with 9 fallback GCD checks.</strong></p><div class="actions"><button id="show-source" type="button">Full function</button><button id="show-trace" type="button">Arithmetic trace</button></div></div>
+</main>
+<dialog id="source-dialog" aria-labelledby="source-title"><div class="dialog-head"><div><h2 id="source-title">Squared-modulus remainder tree</h2><p>Exact original function · rsa_audit/trees.py · lines 34–53</p></div><button id="close-source" type="button">Close</button></div><pre><code>def squared_remainders(
+    tree: Sequence[Sequence[Any]], check: Check = _no_check
+) -&gt; list[Any]:
+    &quot;&quot;&quot;Compute P mod n_i**2 at every leaf, without independent giant divisions.
+
+    The invariant at a node with product V is remainder == P mod V**2.
+    A child&#x27;s squared product divides its parent&#x27;s squared product, so reducing
+    the parent&#x27;s remainder again gives the correct child remainder.
+    Only the current remainder level is retained.
+    &quot;&quot;&quot;
+    if not tree:
+        return []
+    remainders = [tree[-1][0]]  # P mod P**2 == P for P &gt; 1.
+    for children in reversed(tree[:-1]):
+        next_remainders = []
+        for index, value in enumerate(children):
+            check(&quot;remainder_tree&quot;)
+            next_remainders.append(remainders[index // 2] % (value * value))
+        remainders = next_remainders
+    return remainders</code></pre><h3 class="source-section-title">How the scanner consumes the leaf remainders</h3><pre><code>        for index, (n, remainder) in enumerate(zip(numbers, remainders)):
+            check(&quot;gcd&quot;)
+            quotient, residual = divmod(remainder, n)
+            if residual != 0:
+                raise ArithmeticError(&quot;remainder-tree invariant violated: n must divide remainder&quot;)
+            g = int(arithmetic.gcd(n, quotient))
+            operations[&quot;batch_gcd_checks&quot;] += 1
+            if g == unique_moduli[index]:
+                full_overlap.append(index)
+            elif g &gt; 1:
+                save_factor(index, g)</code></pre><p class="dialog-note">The caller builds a product tree from distinct moduli, then calls <code>squared_remainders(tree, check)</code>. The callback checks the cooperative deadline; it does not calculate the remainder. The scanner validates factors and later performs targeted pairwise fallback for <code>g == N</code>.</p></dialog>
+<dialog id="trace-dialog" aria-labelledby="trace-title"><div class="dialog-head"><div><h2 id="trace-title">Exact arithmetic from the Python implementation</h2><p>Small integers explain the algorithm. The examples below were computed with the actual tree functions.</p></div><button id="close-trace" type="button">Close</button></div><div class="trace-controls" aria-label="Choose an arithmetic example"><button data-trace="0" type="button" aria-pressed="true">Shared-prime example</button><button data-trace="1" type="button" aria-pressed="false">Full-overlap triangle</button></div><p class="trace-formula">P = N<sub>i</sub>Q<sub>i</sub> &nbsp; ⇒ &nbsp; r<sub>i</sub> = N<sub>i</sub>(Q<sub>i</sub> mod N<sub>i</sub>)<br>gcd(N<sub>i</sub>, r<sub>i</sub>/N<sub>i</sub>) = gcd(N<sub>i</sub>, Q<sub>i</sub>)</p><pre class="trace-tree" id="trace-tree"></pre><div class="trace-table-wrap"><table class="trace-table"><thead><tr><th scope="col">N<sub>i</sub></th><th scope="col">N<sub>i</sub><sup>2</sup></th><th scope="col">r<sub>i</sub></th><th scope="col">r<sub>i</sub> / N<sub>i</sub></th><th scope="col">g<sub>i</sub></th><th scope="col">Interpretation</th></tr></thead><tbody id="trace-rows"></tbody></table></div><p class="trace-summary" id="trace-summary" aria-live="polite"></p><p class="dialog-note">Reduction modulo N alone would always give zero, because every N divides P. Squaring N retains the information needed after dividing by N. A full-overlap result requires fallback, or an explicit unresolved state if fallback is limited.</p></dialog>
+<script id="trace-data" type="application/json">[{"title": "Shared-prime example", "product": 45045, "tree": [[15, 21, 143], [315, 143], [45045]], "rows": [{"n": 15, "square": 225, "remainder": 45, "quotient": 3, "g": 3}, {"n": 21, "square": 441, "remainder": 63, "quotient": 3, "g": 3}, {"n": 143, "square": 20449, "remainder": 4147, "quotient": 29, "g": 1}]}, {"title": "Full-overlap triangle", "product": 11025, "tree": [[15, 21, 35], [315, 35], [11025]], "rows": [{"n": 15, "square": 225, "remainder": 0, "quotient": 0, "g": 15}, {"n": 21, "square": 441, "remainder": 0, "quotient": 0, "g": 21}, {"n": 35, "square": 1225, "remainder": 0, "quotient": 0, "g": 35}]}]</script>
+<script>
+(() => {
+  'use strict';
+  const byId = id => document.getElementById(id);
+  const fullscreen = byId('fullscreen');
+  fullscreen.addEventListener('click', async () => {
+    try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
+    catch (_) { fullscreen.textContent = 'Use browser full screen'; }
+  });
+  document.addEventListener('fullscreenchange', () => { fullscreen.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; });
+  [['source','show-source','close-source'],['trace','show-trace','close-trace']].forEach(([name,open,close]) => {
+    byId(open).addEventListener('click', () => byId(name + '-dialog').showModal());
+    byId(close).addEventListener('click', () => byId(name + '-dialog').close());
+  });
+  const traces = JSON.parse(byId('trace-data').textContent);
+  const buttons = [...document.querySelectorAll('[data-trace]')];
+  function showTrace(index) {
+    const trace = traces[index];
+    buttons.forEach((button,i) => button.setAttribute('aria-pressed', String(i === index)));
+    byId('trace-tree').textContent = trace.tree.map((level,i) => `${i === 0 ? 'Leaves' : i === trace.tree.length-1 ? 'Root P' : 'Products'}: [${level.join(', ')}]`).join('\n');
+    byId('trace-rows').replaceChildren();
+    trace.rows.forEach(row => {
+      const tr = document.createElement('tr');
+      const state = row.g === row.n ? 'Needs fallback' : row.g > 1 ? 'Factor found' : 'No shared factor';
+      [row.n,row.square,row.remainder,row.quotient,row.g,state].forEach((value,i) => { const td = document.createElement('td'); td.textContent = value; if(i === 5) td.className = row.g === row.n ? 'overlap' : row.g > 1 ? 'found' : ''; tr.append(td); });
+      byId('trace-rows').append(tr);
+    });
+    byId('trace-summary').textContent = index === 0 ? 'Leaf GCDs are [3, 3, 1]. The first two moduli expose factor 3; 143 exposes no shared factor in this collection.' : 'Leaf GCDs are [15, 21, 35]. Each GCD equals its modulus. The factors are not split yet: gcd(15, 21) = 3 is one subsequent fallback check.';
+  }
+  buttons.forEach(button => button.addEventListener('click', () => showTrace(Number(button.dataset.trace))));
+  showTrace(0);
+})();
+</script>
+</body></html>

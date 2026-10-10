@@ -19,7 +19,7 @@ python -X utf8 -m unittest discover -s tests -v
 
 完整 demo 检测 100 个不同的 2048 位模数，包含 2 条重复记录，恢复 5 个不同模数并验证 6 条 OAEP 密文。`scan` 与 `recover` 在独立进程中运行，只接收公开输入。新密钥更换后重新扫描。`validate` 在 demo 之后运行，验证正常密钥、纯重复记录、孤立弱目标、共享素因子和修复后集合，两种算法共 10 次扫描，并检查错误 OAEP label 与被修改的密文。70 项 Python 测试全部通过。
 
-总展示的 8 页、按钮和补充证据窗口使用英文；页面不含演讲提示。配套 [8 分钟讲稿与现场操作](final_presentation/docs/FINAL_SPEECH.md) 单独存放，包含两人分工、英文口播和中文问答说明。[GitHub 交接清单](docs/GITHUB_HANDOFF.md) 列明上传范围与两人整合步骤。
+总展示的 10 页、按钮和补充证据窗口使用英文；第 9 页为 A 的 Batch GCD 核心代码，第 10 页为 B 的私钥重建与验证。页面不含演讲提示。配套 [8 分钟主线讲稿与现场操作](final_presentation/docs/FINAL_SPEECH.md) 单独存放，包含两人分工、代码页讲述、英文口播和中文问答说明。[GitHub 交接清单](docs/GITHUB_HANDOFF.md) 列明上传范围与两人整合步骤。
 
 双击 `final_presentation/run_presentation.cmd`（项目根目录同名启动器也会转到这里），打开 `http://127.0.0.1:8765/presentation/final.html`。第 6 页的 **Run Python pipeline** 可实际调用扫描与恢复模块，显示命令输出、六条明文核对和换钥集合重扫结果；失败会显示错误。现场单次耗时与历史性能图独立呈现。直接打开 HTML 仍可离线查看动画和归档结果；具体说明见 [展示说明](final_presentation/README.md)。
 

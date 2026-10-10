@@ -19,6 +19,7 @@
     byId('previous').disabled = page === 0;
     byId('next').disabled = page === slides.length - 1;
     [...byId('pages').children].forEach((button, i) => button.setAttribute('aria-current', i === page ? 'page' : 'false'));
+    byId('pages').children[page]?.scrollIntoView?.({block: 'nearest', inline: 'nearest', behavior: 'auto'});
     if (previous !== page && !reducedMotion.matches && slides[page].animate) {
       pageAnimation = slides[page].animate([{opacity: 0, transform: 'translateY(8px)'}, {opacity: 1, transform: 'translateY(0)'}], {duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)'});
     }

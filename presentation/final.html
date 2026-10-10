@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
   <title>RSA Shared-Prime Audit | SC6104</title>
-  <link rel="stylesheet" href="assets/final.css?v=20261010-final2">
-  <script src="assets/final-data.js" defer></script><script src="assets/final.js?v=20261010-final2" defer></script><script src="assets/live.js?v=20261010-final2" defer></script>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="assets/final.css?v=20261010-final3">
+  <script src="assets/final-data.js" defer></script><script src="assets/final.js?v=20261010-final3" defer></script><script src="assets/live.js?v=20261010-final2" defer></script>
 </head>
 <body>
 <header class="bar"><span class="brand"><span class="brand-mark" aria-hidden="true"></span>SC6104 <span class="brand-divider">/</span> RSA SHARED-PRIME AUDIT</span><span id="section-label" class="section-label">Research goal</span><button id="fullscreen" type="button">Full screen</button></header>
@@ -57,6 +58,8 @@
       <div class="pool-summary"><p class="panel-label">WEAK-PRIME POOL EXPERIMENT</p><h3>Smaller pools expose more keys</h3><div id="pool-bars"></div><p class="small">60 keys per dataset · 3 datasets per pool size.<br>Median recoverable fraction in the controlled model.</p></div>
     </div><div class="support-links"><button type="button" data-dialog="pool-dialog">Pool experiment</button><button type="button" data-dialog="graph-dialog">Shared-factor graph</button><button type="button" data-dialog="controls-dialog">Validation evidence</button><span>Also implemented: RSA PEM public-key import</span></div><p class="footnote">Public samples, measured CSV records, configurations, environment details and replay tooling accompany the implementation.</p>
   </section>
+  <section class="slide frame-slide" data-title="A · Batch GCD implementation" hidden><iframe src="embed/a-key-implementation.html?v=20261010-final3" title="A: squared remainder tree, final GCD and full-overlap classification" allow="fullscreen"></iframe></section>
+  <section class="slide frame-slide" data-title="B · RSA private-key recovery" hidden><iframe src="embed/b-key-implementation.html?v=20261010-final3" title="B: private-key reconstruction, validation and OAEP decryption" allow="fullscreen"></iframe></section>
 </main>
 <footer class="navigation" aria-label="Presentation navigation"><button id="previous" type="button">Previous</button><div id="pages" aria-label="Slide navigation"></div><span id="page-label" aria-live="polite"></span><button id="next" class="primary" type="button">Next</button></footer>
 

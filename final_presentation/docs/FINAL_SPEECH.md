@@ -12,7 +12,7 @@
 
 ## 启动与排练
 
-在 `final_presentation` 目录双击 `run_presentation.cmd`，保持服务窗口打开，进入：
+在 `final_presentation` 目录双击 `run_presentation.cmd`，保持服务窗口打开。脚本自动打开带版本号的当前十页展示；默认地址为：
 
 `http://127.0.0.1:8765/presentation/final.html`
 
@@ -22,15 +22,15 @@
 ..\.venv\Scripts\python.exe -X utf8 scripts/presentation_server.py
 ```
 
-如果 8765 已被旧的静态预览服务使用，可以关闭该服务，或改用：
+如果 8765 已被旧的静态预览服务使用，启动器自动尝试后续端口，以启动窗口打印的地址为准。也可指定起始端口：
 
 ```powershell
 .\run_presentation.cmd --port 8766
 ```
 
-随后打开 `http://127.0.0.1:8766/presentation/final.html`。普通 `python -m http.server` 只提供静态页面，不能执行现场流水线。
+脚本会打开实际使用端口的版本地址。启动窗口应显示 **10 slides** 和 `final_presentation` 的绝对路径。普通 `python -m http.server` 只提供静态页面，不能执行现场流水线。
 
-直接双击 HTML 仍可离线讲解八页、动画和归档数据；实际 Python 执行需要上述服务。现场计算失败时页面显示错误，不会改用旧日志伪装成功。
+直接双击 HTML 仍可离线讲解十页、动画、核心代码和归档数据；实际 Python 执行需要上述服务。现场计算失败时页面显示错误，不会改用旧日志伪装成功。
 
 排练前执行一次第 6 页的现场流水线，确认五个步骤通过，点击 **Save run log** 留存记录。运行使用临时目录，不覆盖原实验、不保存新私钥文件。窗口关闭后 Python 服务不会自动停止；服务窗口中按 Ctrl+C 停止。
 
@@ -38,14 +38,18 @@
 
 | 页 | 时间 | 主讲 | 重点 |
 |---|---|---|---|
-| 1 | 0:00–0:35 | A | 问题、公开输入与项目闭环 |
-| 2 | 0:35–1:35 | A | 共享素因子如何暴露私钥 |
-| 3 | 1:35–3:00 | A | 乘积树、平方模数余数树、最终 GCD |
-| 4 | 3:00–4:05 | A | 去重、全重叠、回退和 unresolved |
-| 5 | 4:05–5:00 | B | 实测比较及超时口径 |
-| 6 | 5:00–6:50 | B | 现场 Python 执行与 OAEP 证据 |
-| 7 | 6:50–7:25 | B | 换钥结果与检测范围 |
-| 8 | 7:25–8:00 | B | 两人的贡献、弱素数池结果、结论 |
+| 1 | 0:00–0:25 | A | 问题、公开输入与项目闭环 |
+| 2 | 0:25–1:15 | A | 共享素因子如何暴露私钥 |
+| 3 | 1:15–2:25 | A | 乘积树、平方模数余数树、最终 GCD |
+| 4 | 2:25–3:20 | A | 去重、全重叠、回退和 unresolved |
+| 5 | 3:20–4:05 | B | 实测比较及超时口径 |
+| 6 | 4:05–5:35 | B | 现场 Python 执行与 OAEP 证据 |
+| 7 | 5:35–6:00 | B | 换钥结果与检测范围 |
+| 8 | 6:00–6:25 | B | 两人的贡献、弱素数池结果、结论 |
+| 9 | 6:25–7:15 | A | 平方模数余数树及最终 GCD 的原代码 |
+| 10 | 7:15–8:00 | B | 从一个因子重建私钥，检查后正常 OAEP 解密 |
+
+新增代码页后，以上为十页合计八分钟的排练目标。下面的详细稿是内容库，不宜逐字全部读完；前八页需要按表压缩，代码页的完整源码与算例窗口可留给问答。第 8 页讲完结果后，由 B 过渡到“两页核心实现”，交回 A 讲第 9 页。
 
 两人都应理解整个流程。A 负责回答树算法和边界状态，B 负责回答数据、恢复、计时和验证；可以相互补充。
 
@@ -157,6 +161,26 @@ gcd(N_i, r_i / N_i) = gcd(N_i, Q_i)
 > Our conclusion is that key length cannot compensate for shared primes. Independent, reliable prime generation is essential.
 
 弱池模型每套 60 个不同模数、每个池大小 3 套；每个模数一个素因子取自有限池，另一个新生成。不要泛化成真实设备的失效率或整个随机数发生器的完整模拟。**Shared-factor graph** 和 **Validation evidence** 留给问答使用。
+
+## 第 9 页 · A — Batch GCD implementation
+
+操作：指左栏第 46、51 行，再指右栏第 140、143、145–148 行。正式讲述可不打开窗口；问答时 **Full function** 查看完整代码，**Arithmetic trace** 切换共享素因子和全重叠算例。
+
+> This is the core of my batch detector. The left code walks the product tree downward. At every node, the remainder is the total product modulo that node's squared product. Integer division by two selects the parent.
+>
+> At a leaf, the right code checks that the remainder is divisible by the modulus, then computes a GCD with the quotient. One means no shared factor found; a proper divisor gives a factor. A GCD equal to the whole modulus requires fallback, rather than a successful factorization.
+
+你需要理解并能推导：`P=N_i Q_i`，所以 `P mod N_i² = N_i(Q_i mod N_i)`；除以 `N_i` 后再求 GCD 与 `gcd(N_i,Q_i)` 等价。`index // 2` 对应乘积树的两子节点父索引，奇数末节点也沿用这一索引。`check()` 只检查执行期限。去重在这段前面完成，因子验证与全重叠回退在其他位置完成；不能说这 21 行就是整个扫描器。详细中文解释在 `review_slides/A_CODE_EXPLANATION.md`。
+
+## 第 10 页 · B — RSA private-key recovery
+
+操作：先指左栏 `q`、`lambda_n`、`d`，再概括右栏四项检查。**Full function** 显示完整逻辑，错误信息译为英文；**OAEP decryption** 说明恢复的私钥如何用于解密。
+
+> Once A finds a proper factor, my recovery code calculates the other prime, the least common multiple, and the modular inverse that gives the private exponent. PyCryptodome constructs the RSA key and checks its consistency.
+>
+> The four conditions reject invalid divisors, repeated or composite factors, a non-invertible exponent, and inconsistent results. The recovered key then performs ordinary OAEP decryption with matching SHA-256, MGF1 and label settings. Our recorded experiment verifies six messages from five distinct keys. We recover compromised keys; we do not break OAEP itself.
+
+小整数手算：`77/7=11`，`lcm(6,10)=30`，`17×23 mod 30=1`，因此 `d=23`。这个例子只说明 RSA 算术，不是可用来做 OAEP 的 2048-bit 密钥。真实解密已在第 6 页现场流程中展示；明文是否正确由攻击后的独立核验确认，不能仅凭 `RSA.construct()` 成功就宣称解密正确。
 
 ## 两分钟问答：两人都要会的答案
 

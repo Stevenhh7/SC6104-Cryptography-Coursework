@@ -2,13 +2,10 @@
 setlocal
 chcp 65001 >nul
 cd /d "%~dp0"
-if exist ".venv\Scripts\python.exe" (
-  ".venv\Scripts\python.exe" -X utf8 scripts\presentation_server.py %*
-) else if exist "..\.venv\Scripts\python.exe" (
-  "..\.venv\Scripts\python.exe" -X utf8 scripts\presentation_server.py %*
-) else (
-  python -X utf8 scripts\presentation_server.py %*
-)
+set "PRESENTATION_PYTHON=python"
+if exist "%~dp0..\.venv\Scripts\python.exe" set "PRESENTATION_PYTHON=%~dp0..\.venv\Scripts\python.exe"
+if exist "%~dp0.venv\Scripts\python.exe" set "PRESENTATION_PYTHON=%~dp0.venv\Scripts\python.exe"
+"%PRESENTATION_PYTHON%" -u -X utf8 "%~dp0scripts\presentation_server.py" --open-browser %*
 if errorlevel 1 (
   echo Presentation server stopped with an error. See presentation\README.md.
   pause

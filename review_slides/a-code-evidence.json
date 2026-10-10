@@ -1,0 +1,101 @@
+{
+  "page": "a-key-implementation.html",
+  "sources": {
+    "rsa_audit/trees.py": "e1ab4234c455b16e9d032323943e5367d4eed151d97e3b83b231767c25e7cf1d",
+    "rsa_audit/scanner.py": "aef6a8ba0d228752a7785dba13f5df6ef49f2ba9bc13a09e4ce12cda83b92442"
+  },
+  "excerpts": {
+    "rsa_audit/trees.py": [
+      44,
+      53
+    ],
+    "rsa_audit/scanner.py": [
+      138,
+      148
+    ]
+  },
+  "examples": [
+    {
+      "title": "Shared-prime example",
+      "product": 45045,
+      "tree": [
+        [
+          15,
+          21,
+          143
+        ],
+        [
+          315,
+          143
+        ],
+        [
+          45045
+        ]
+      ],
+      "rows": [
+        {
+          "n": 15,
+          "square": 225,
+          "remainder": 45,
+          "quotient": 3,
+          "g": 3
+        },
+        {
+          "n": 21,
+          "square": 441,
+          "remainder": 63,
+          "quotient": 3,
+          "g": 3
+        },
+        {
+          "n": 143,
+          "square": 20449,
+          "remainder": 4147,
+          "quotient": 29,
+          "g": 1
+        }
+      ]
+    },
+    {
+      "title": "Full-overlap triangle",
+      "product": 11025,
+      "tree": [
+        [
+          15,
+          21,
+          35
+        ],
+        [
+          315,
+          35
+        ],
+        [
+          11025
+        ]
+      ],
+      "rows": [
+        {
+          "n": 15,
+          "square": 225,
+          "remainder": 0,
+          "quotient": 0,
+          "g": 15
+        },
+        {
+          "n": 21,
+          "square": 441,
+          "remainder": 0,
+          "quotient": 0,
+          "g": 21
+        },
+        {
+          "n": 35,
+          "square": 1225,
+          "remainder": 0,
+          "quotient": 0,
+          "g": 35
+        }
+      ]
+    }
+  ]
+}

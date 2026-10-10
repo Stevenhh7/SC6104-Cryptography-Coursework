@@ -6,19 +6,38 @@ Every scan/recovery invokes the existing rsa_lab CLI in a new Python process.
 
 import argparse
 from datetime import datetime, timezone
+import errno
 import hashlib
+from html.parser import HTMLParser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
+import socket
 import subprocess
 import sys
 import tempfile
 import threading
 import time
 from urllib.parse import unquote, urlsplit
+import webbrowser
 
 ROOT = Path(__file__).resolve().parents[1]
 RUN_LOCK = threading.Lock()
+
+
+def presentation_info():
+    """Identify the HTML on disk, so the launcher cannot reuse an old page URL."""
+    class SlideCounter(HTMLParser):
+        count = 0
+
+        def handle_starttag(self, tag, attrs):
+            if tag == "section" and "slide" in dict(attrs).get("class", "").split():
+                self.count += 1
+
+    content = (ROOT / "presentation" / "final.html").read_bytes()
+    counter = SlideCounter()
+    counter.feed(content.decode("utf-8"))
+    return {"slide_count": counter.count, "presentation_version": hashlib.sha256(content).hexdigest()[:16]}
 
 
 def read_json(path):
@@ -125,6 +144,16 @@ def run_pipeline(root, emit):
         emit(result)
 
 
+class PresentationHTTPServer(ThreadingHTTPServer):
+    # Windows SO_REUSEADDR can let two previews bind the same port.
+    allow_reuse_address = False
+
+    def server_bind(self):
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
+
+
 class PresentationHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -132,28 +161,50 @@ class PresentationHandler(SimpleHTTPRequestHandler):
     def allowed_host(self):
         return self.headers.get("Host") in {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
 
+    def end_headers(self):
+        # Every launch must use the current HTML, iframe pages and scripts.
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def json_response(self, status, value):
         body = json.dumps(value).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def browser_probe(self):
+        if urlsplit(self.path).path not in {"/favicon.ico", "/.well-known/appspecific/com.chrome.devtools.json"}:
+            return False
+        # Optional browser requests: no legacy ICO or DevTools workspace binding.
+        # The real SVG favicon is linked from the presentation HTML.
+        self.send_response(204)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+        return True
 
     def do_GET(self):
         if not self.allowed_host():
             self.send_error(403)
             return
+        if self.browser_probe():
+            return
         path = urlsplit(self.path).path
         if path == "/api/live/status":
-            self.json_response(200, {"runner": "rsa-presentation-v1", "python": sys.version.split()[0], "busy": RUN_LOCK.locked()})
+            self.json_response(200, {"runner": "rsa-presentation-v1", "python": sys.version.split()[0], "busy": RUN_LOCK.locked(), **presentation_info()})
         elif path == "/":
             self.send_response(302)
-            self.send_header("Location", "/presentation/final.html")
+            self.send_header("Location", "/presentation/final.html?v=" + presentation_info()["presentation_version"])
             self.end_headers()
         else:
             super().do_GET()
+
+    def do_HEAD(self):
+        if not self.allowed_host():
+            self.send_error(403)
+        elif not self.browser_probe():
+            super().do_HEAD()
 
     def send_head(self):
         path = (ROOT / unquote(urlsplit(self.path).path).lstrip("/")).resolve()
@@ -161,6 +212,10 @@ class PresentationHandler(SimpleHTTPRequestHandler):
         if not self.allowed_host() or not allowed or not path.is_file():
             self.send_error(404)
             return None
+        # Old cached responses may still send validators even after this fix.
+        for name in ("If-Modified-Since", "If-None-Match"):
+            if name in self.headers:
+                del self.headers[name]
         return super().send_head()
 
     def do_POST(self):
@@ -195,7 +250,6 @@ class PresentationHandler(SimpleHTTPRequestHandler):
         try:
             self.send_response(200)
             self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
-            self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.end_headers()
             run_pipeline(ROOT, emit)
@@ -205,14 +259,45 @@ class PresentationHandler(SimpleHTTPRequestHandler):
             RUN_LOCK.release()
 
 
+def bind_server(port):
+    """A previous preview may own the requested port; never reuse its content."""
+    for candidate in range(port, min(port + 10, 65536)):
+        try:
+            return PresentationHTTPServer(("127.0.0.1", candidate), PresentationHandler)
+        except OSError as error:
+            if error.errno != errno.EADDRINUSE and getattr(error, "winerror", None) != 10048:
+                raise
+    raise OSError(f"No available local port between {port} and {min(port + 9, 65535)}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--open-browser", action="store_true", help="Open the current version after starting")
+    parser.add_argument("--no-browser", dest="open_browser", action="store_false", help="Start without opening a browser")
     args = parser.parse_args()
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), PresentationHandler)
-    print(f"Final presentation: http://127.0.0.1:{server.server_port}/presentation/final.html", flush=True)
+    if not 0 <= args.port <= 65535:
+        parser.error("port must be between 0 and 65535")
+    info = presentation_info()
+    if info["slide_count"] != 10:
+        parser.exit(1, f"Expected 10 slides in {ROOT / 'presentation/final.html'}, found {info['slide_count']}.\n")
+    try:
+        server = bind_server(args.port)
+    except OSError as error:
+        parser.exit(1, f"Could not start the presentation server: {error}\n")
+    url = f"http://127.0.0.1:{server.server_port}/presentation/final.html?v={info['presentation_version']}"
+    if args.port and server.server_port != args.port:
+        print(f"Port {args.port} is occupied; using port {server.server_port}.", flush=True)
+    print(f"Final presentation ({info['slide_count']} slides): {url}", flush=True)
+    print(f"Presentation folder: {ROOT}", flush=True)
     print("Press Ctrl+C to stop. The live run uses temporary result files.", flush=True)
     try:
+        if args.open_browser:
+            try:
+                if not webbrowser.open(url, new=2):
+                    print("Open the URL above in your browser.", flush=True)
+            except OSError:
+                print("Open the URL above in your browser.", flush=True)
         server.serve_forever()
     except KeyboardInterrupt:
         pass

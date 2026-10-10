@@ -4,7 +4,7 @@
 
 ## 最终展示
 
-演示资料集中在 `final_presentation/`。双击 `final_presentation/final.html` 打开离线总展示；现场执行使用 `final_presentation/run_presentation.cmd`，打开服务输出的网址，并在第 6 页点击 **Run Python pipeline**。8 页正文、导航按钮和补充窗口为英文，讲稿独立放在 `final_presentation/docs/FINAL_SPEECH.md`。总展示包含 A 的三页动画、实测性能、OAEP 恢复与换钥结果。
+演示资料集中在 `final_presentation/`。双击 `final_presentation/final.html` 打开离线总展示；现场执行使用 `final_presentation/run_presentation.cmd`，打开服务输出的网址，并在第 6 页点击 **Run Python pipeline**。10 页正文、导航按钮和补充窗口为英文，讲稿独立放在 `final_presentation/docs/FINAL_SPEECH.md`。总展示包含 A 的三页动画、实测性能、OAEP 恢复与换钥结果，以及第 9、10 页的 A/B 核心代码。
 
 现场操作运行 `run_demo.cmd`，或在仓库根目录执行：
 
