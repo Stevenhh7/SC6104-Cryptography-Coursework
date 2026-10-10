@@ -1,13 +1,13 @@
 """Exercise the fixed HTTP runner, including one real public-only RSA replay."""
 import http.client
 import errno
-import hashlib
 import io
 import json
 from pathlib import Path
 import re
 import sys
 import threading
+import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import Mock, call, patch
@@ -83,11 +83,41 @@ class PresentationServerTests(unittest.TestCase):
         _, status, _ = self.request("GET", "/api/live/status")
         info = json.loads(status)
         self.assertEqual(info["slide_count"], 10)
-        self.assertEqual(info["presentation_version"], hashlib.sha256(content).hexdigest()[:16])
+        self.assertRegex(info["presentation_version"], r"^[0-9a-f]{16}$")
+        self.assertEqual(info["presentation_version"], app.presentation_info()["presentation_version"])
         code, _, headers = self.request_details("GET", "/")
         self.assertEqual(code, 302)
         self.assertEqual(headers["Location"], "/presentation/final.html?v=" + info["presentation_version"])
         self.assertEqual(headers["Cache-Control"], "no-store")
+
+    def test_version_changes_when_embedded_code_or_assets_change(self):
+        with tempfile.TemporaryDirectory(prefix="presentation-version-") as temporary:
+            root = Path(temporary)
+            presentation = root / "presentation"
+            (presentation / "embed").mkdir(parents=True)
+            (presentation / "assets").mkdir()
+            (presentation / "final.html").write_text('<section class="slide"></section>' * 10, encoding="utf-8")
+            code_page = presentation / "embed" / "b-key-implementation.html"
+            code_page.write_text("old recovery page", encoding="utf-8")
+            style = presentation / "assets" / "implementation-embed.css"
+            style.write_text("body { color: navy; }", encoding="utf-8")
+            with patch.object(app, "ROOT", root):
+                before = app.presentation_info()
+                self.assertEqual(before["slide_count"], 10)
+                self.assertEqual(before, app.presentation_info())
+                code_page.write_text("approved recovery and verification page", encoding="utf-8")
+                after_code = app.presentation_info()
+                self.assertNotEqual(before["presentation_version"], after_code["presentation_version"])
+                style.write_text("body { color: teal; }", encoding="utf-8")
+                self.assertNotEqual(after_code["presentation_version"], app.presentation_info()["presentation_version"])
+
+    def test_updated_b_page_is_available_from_the_final_deck(self):
+        _, final, _ = self.request("GET", "/presentation/final.html")
+        self.assertIn(b'embed/b-key-implementation.html?v=20261010-final4', final)
+        code, page, _ = self.request("GET", "/presentation/embed/b-key-implementation.html")
+        self.assertEqual(code, 200)
+        for text in (b'Private-key reconstruction', b'OAEP configuration and decryption', b'Recovery pipeline', b'Verification evidence', b'validation-data'):
+            self.assertIn(text, page)
 
     def test_optional_browser_requests_do_not_report_404(self):
         for path in ("/favicon.ico", "/.well-known/appspecific/com.chrome.devtools.json"):

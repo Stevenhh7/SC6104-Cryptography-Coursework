@@ -26,7 +26,7 @@ RUN_LOCK = threading.Lock()
 
 
 def presentation_info():
-    """Identify the HTML on disk, so the launcher cannot reuse an old page URL."""
+    """Identify the deck and its code pages/assets, including embedded updates."""
     class SlideCounter(HTMLParser):
         count = 0
 
@@ -37,7 +37,14 @@ def presentation_info():
     content = (ROOT / "presentation" / "final.html").read_bytes()
     counter = SlideCounter()
     counter.feed(content.decode("utf-8"))
-    return {"slide_count": counter.count, "presentation_version": hashlib.sha256(content).hexdigest()[:16]}
+    version = hashlib.sha256()
+    presentation = ROOT / "presentation"
+    resources = sorted(path for path in presentation.rglob("*")
+                       if path.is_file() and path.suffix.lower() in {".html", ".css", ".js"})
+    for resource in resources:
+        version.update(resource.relative_to(ROOT).as_posix().encode("utf-8") + b"\0")
+        version.update(hashlib.sha256(resource.read_bytes()).digest())
+    return {"slide_count": counter.count, "presentation_version": version.hexdigest()[:16]}
 
 
 def read_json(path):

@@ -13,9 +13,9 @@ body[data-embedded="true"] main {
   h1 { font-size: 32px; margin-bottom: 8px; }
   .subtitle { font-size: 16px; margin-bottom: 16px; }
   .content { gap: 22px; }
-  .code-heading { margin-bottom: 8px; }
-  .code-heading h2 { font-size: 19px; }
-  .code-heading span { font-size: 11px; }
+  .code-heading, .heading { margin-bottom: 8px; }
+  .code-heading h2, .heading h2 { font-size: 19px; }
+  .code-heading span, .heading span { font-size: 11px; }
   main pre { font-size: 15px; line-height: 1.35; padding: 13px; }
   .code-line { grid-template-columns: 25px minmax(0, 1fr); }
   .num { line-height: 1.78; }
@@ -37,4 +37,16 @@ body[data-embedded="true"] main {
   h1 { font-size: 28px; }
   pre { font-size: 14px; }
   .code-heading { flex-wrap: wrap; }
+}
+
+/* B's two-stage code page shares the deck's header and available frame height. */
+@media (min-width: 1000px) and (max-height: 720px) {
+  body[data-implementation="b"] .eyebrow { display: none; }
+  body[data-implementation="b"] main { padding: 14px 28px; }
+  body[data-implementation="b"] h1 { font-size: 30px; }
+  body[data-implementation="b"] .subtitle { margin-bottom: 12px; }
+  body[data-implementation="b"] .equation { font-size: 19px; margin-top: 8px; }
+  body[data-implementation="b"] .example { margin-top: 12px; padding-top: 10px; }
+  body[data-implementation="b"] .explanation { font-size: 12px; margin-top: 6px; }
+  body[data-implementation="b"] .footer { margin-top: 8px; }
 }

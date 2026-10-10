@@ -1,87 +1,108 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
-<title>Key implementation: RSA private-key recovery</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<title>Key implementation: RSA recovery and OAEP decryption</title>
 <style>
-:root{font-family:"Segoe UI",Arial,sans-serif;color:#16243f;background:#f3f6fa;--blue:#235de3;--teal:#087d83;--muted:#61718a;--line:#dce4ef}
-*{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}button{font:inherit;background:white;color:inherit;border:1px solid var(--line);border-radius:7px;padding:8px 13px;cursor:pointer}button:hover{background:#eaf1ff}button:focus-visible{outline:3px solid #749eff;outline-offset:3px}
-header{height:56px;display:flex;align-items:center;gap:20px;padding:0 36px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.06em}header strong{flex:1}header span{color:var(--muted)}header button{font-size:12px}
-main{max-width:1580px;margin:auto;min-height:calc(100dvh - 56px);padding:30px 42px 24px;display:flex;flex-direction:column;justify-content:center}.eyebrow{font-size:13px;letter-spacing:.13em;color:var(--blue);font-weight:700;margin:0 0 9px}h1{font-size:clamp(32px,3.15vw,46px);line-height:1.18;letter-spacing:-.035em;margin:0 0 12px}.subtitle{font-size:19px;line-height:1.45;color:var(--muted);margin:0 0 24px}
-.content{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}.code-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:11px}.code-heading h2{font-size:23px;margin:0;line-height:1.3;letter-spacing:-.02em}.code-heading span{font-size:13px;color:var(--muted)}pre{margin:0;background:#101c30;color:#dbe9ff;border-radius:10px;padding:18px 17px;font:clamp(16px,1.38vw,21px)/1.48 Consolas,"Cascadia Code",monospace}.code-line{display:grid;grid-template-columns:28px minmax(0,1fr)}.num{color:#8396b2;user-select:none;font-size:.76em;line-height:1.95}.code-text{white-space:pre-wrap;overflow-wrap:anywhere}.core .code-line:nth-child(4),.core .code-line:nth-child(5){color:#8fe0d5}.validation .code-line:nth-child(even){color:#adbeda}.code-note{font-size:14px;color:var(--muted);line-height:1.5;margin:12px 0 0}.key-equations{margin:15px 0 0;font:23px/1.5 Cambria,Georgia,serif;color:var(--teal)}
-.example{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 24px;margin-top:22px;border-top:1px solid var(--line);padding-top:17px}.example h2{font-size:17px;color:var(--muted);font-weight:600;margin:0}.math{font:22px/1.45 Cambria,Georgia,serif}.verified{color:var(--teal);font-weight:600}.footer{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:15px}.footnote{font-size:13px;line-height:1.55;color:var(--muted);margin:0;max-width:1150px}.footnote strong{font-weight:600;color:var(--teal)}.footer button{font-size:13px;white-space:nowrap}.actions{display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}.dialog-note{font-size:15px;line-height:1.55;color:var(--muted);margin:16px 0 0}
-dialog{width:min(1140px,94vw);max-height:92vh;border:1px solid var(--line);border-radius:13px;background:#f8faff;color:#16243f;padding:25px 29px;overflow:auto}dialog::backdrop{background:#14243eaa}.dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:25px;margin-bottom:16px}.dialog-head h2{font-size:28px;line-height:1.3;margin:0}.dialog-head p{font-size:14px;color:var(--muted);margin:8px 0 0}dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:18px;line-height:1.6}
-@media(min-width:1000px) and (max-height:800px){main{padding:20px 36px 18px}.eyebrow{font-size:12px;margin-bottom:8px}h1{font-size:36px;margin-bottom:10px}.subtitle{font-size:17px;margin-bottom:18px}.content{gap:23px}.code-heading{margin-bottom:9px}.code-heading h2{font-size:20px}.code-heading span{font-size:12px}pre{font-size:17px;line-height:1.4;padding:15px}.code-note{font-size:12px;margin-top:9px}.key-equations{font-size:21px;margin-top:10px}.example{margin-top:17px;padding-top:13px}.math{font-size:20px}.footer{margin-top:12px}.footnote{font-size:12px}}
-@media(max-width:999px){main{padding:26px 22px;justify-content:start}.content{grid-template-columns:1fr;gap:26px}header{padding:0 22px}header span{display:none}h1{font-size:34px}.subtitle{font-size:17px}pre{font-size:17px}.code-heading h2{font-size:21px}.example{gap:8px 18px}.footer{align-items:flex-start;flex-direction:column}.code-note{font-size:13px}.math{font-size:20px}dialog{padding:20px}dialog pre{font-size:15px}}
-@media print{header,.footer button,dialog{display:none}main{padding:20px;min-height:0}body{background:white}.content{grid-template-columns:1fr 1fr;gap:20px}pre{font-size:14px;line-height:1.45;print-color-adjust:exact}h1{font-size:30px}.subtitle{font-size:15px}.code-heading h2{font-size:18px}.code-note,.footnote{font-size:11px}.math{font-size:19px}}
+:root{font-family:"Segoe UI",Arial,sans-serif;color:#16243f;background:#f3f6fa;--blue:#235de3;--teal:#087d83;--muted:#61718a;--line:#dce4ef}*{box-sizing:border-box}body{margin:0}button{font:inherit;color:inherit;background:white;border:1px solid var(--line);border-radius:7px;padding:8px 13px;cursor:pointer}button:hover{background:#eaf1ff}button:focus-visible{outline:3px solid #749eff;outline-offset:3px}
+header{height:52px;display:flex;align-items:center;gap:20px;padding:0 36px;border-bottom:1px solid var(--line);font-size:12px;letter-spacing:.06em}header strong{flex:1}header span{color:var(--muted)}header button{font-size:12px}
+main{max-width:1760px;min-height:calc(100dvh - 52px);margin:auto;padding:25px 40px 22px;display:flex;flex-direction:column;justify-content:center}.eyebrow{font-size:13px;letter-spacing:.13em;color:var(--blue);font-weight:700;margin:0 0 8px}h1{font-size:clamp(32px,2.8vw,45px);line-height:1.17;letter-spacing:-.03em;margin:0 0 11px}.subtitle{font-size:19px;line-height:1.4;color:var(--muted);margin:0 0 20px}.subtitle strong{color:var(--teal);font-weight:600}
+.content{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}.content>section{min-width:0}.heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:11px}.heading h2{font-size:23px;line-height:1.3;margin:0;letter-spacing:-.02em}.heading span{font-size:12px;color:var(--muted)}pre{margin:0;background:#101c30;color:#dbe9ff;border-radius:10px;padding:17px 15px;font:clamp(15px,1vw,18px)/1.45 Consolas,"Cascadia Code",monospace}.code-line{display:grid;grid-template-columns:28px minmax(0,1fr);border-radius:4px}.num{font-size:.75em;line-height:1.93;color:#8396b2;user-select:none}.code-text{white-space:pre-wrap;overflow-wrap:anywhere}.code-gap{display:block;height:13px}.focus{color:#8fe0d5}.code-line.active{background:#193453;box-shadow:0 0 0 3px #193453}.equation{font:22px/1.45 Cambria,Georgia,serif;color:var(--teal);margin:11px 0 0}
+.example{display:flex;align-items:center;flex-wrap:wrap;gap:9px 13px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}.example h2{font-size:15px;font-weight:600;color:var(--muted);margin:0}.example .input{font:20px/1.4 Cambria,Georgia,serif;margin-right:5px}.example button{font:20px/1.2 Cambria,Georgia,serif;padding:6px 11px}.example button.active{background:#e6f5f3;border-color:#64b7b0}.identity{font:20px/1.4 Cambria,Georgia,serif;color:var(--teal)}.explanation{font-size:14px;line-height:1.45;color:var(--muted);margin:9px 0 0;min-height:21px}
+.footer{display:flex;align-items:center;justify-content:space-between;gap:22px;margin-top:12px}.footnote{font-size:12px;line-height:1.5;color:var(--muted);margin:0;max-width:1170px}.actions{display:flex;flex-wrap:wrap;gap:8px;flex-shrink:0}.actions button{font-size:13px}
+dialog{width:min(1190px,94vw);max-height:92dvh;overflow:auto;padding:24px 28px;border:1px solid var(--line);border-radius:13px;background:#f8faff;color:#16243f}dialog::backdrop{background:#14243eaa}.dialog-head{display:flex;justify-content:space-between;align-items:flex-start;gap:25px;margin-bottom:16px}.dialog-head h2{font-size:28px;line-height:1.3;margin:0}.dialog-head p{font-size:14px;color:var(--muted);margin:8px 0 0}dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:17px;line-height:1.55}.dialog-note{font-size:14px;line-height:1.55;color:var(--muted);margin:16px 0 0}.dialog-intro{font-size:17px;line-height:1.5;margin:0 0 16px}.boundary{font-size:15px;line-height:1.5;margin:0 0 18px;padding:12px 15px;background:#e8f2f5;border-left:3px solid var(--teal)}.supplement-grid{display:grid;grid-template-columns:1fr 1fr;gap:27px;margin-top:20px}.supplement-grid h3,.case-heading h3{font-size:19px;margin:0 0 9px}.supplement-grid p{font-size:15px;line-height:1.55;margin:0 0 9px}.supplement-result{color:var(--teal);font-weight:650}.case-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:23px}.recorded-label{font-size:12px;color:var(--teal);font-weight:600}.case-buttons{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0 16px}.case-buttons [aria-pressed="true"]{background:#e6f5f3;border-color:#64b7b0;color:var(--teal)}.case-result{margin:0}.case-result>div{display:grid;grid-template-columns:155px 1fr;gap:18px;border-bottom:1px solid var(--line);padding:11px 0}.case-result dt{font-size:14px;color:var(--muted)}.case-result dd{font-size:17px;margin:0;overflow-wrap:anywhere}.case-result>div:last-child dd{color:var(--teal);font-weight:650}.case-meaning{font-size:16px;line-height:1.55;margin:16px 0 0}
+@media(min-width:1000px) and (max-height:800px){main{padding:17px 36px 16px}.eyebrow{font-size:12px;margin-bottom:6px}h1{font-size:35px;margin-bottom:8px}.subtitle{font-size:16px;margin-bottom:15px}.heading{margin-bottom:8px}.heading h2{font-size:20px}.heading span{font-size:11px}pre{font-size:15.5px;line-height:1.32;padding:13px 12px}.code-gap{height:10px}.equation{font-size:20px;margin-top:8px}.example{margin-top:14px;padding-top:11px;gap:7px 10px}.example .input,.example button,.identity{font-size:18px}.explanation{font-size:12px;min-height:18px;margin-top:7px}.footer{margin-top:9px}.footnote{font-size:11.5px}.actions button{font-size:12px;padding:7px 10px}}
+@media(max-width:999px){main{padding:25px 22px;justify-content:flex-start}header{padding:0 22px}header span{display:none}h1{font-size:32px}.subtitle{font-size:17px}.content{grid-template-columns:1fr;gap:27px}.heading h2{font-size:21px}pre{font-size:16px}.footer{align-items:flex-start;flex-direction:column;gap:14px}.example .input,.example button,.identity{font-size:18px}.equation{font-size:20px}dialog{padding:20px}dialog pre{font-size:15px}.dialog-head h2{font-size:24px}}
+@media(max-width:650px){.heading{align-items:flex-start;flex-direction:column;gap:4px}pre{font-size:14px;padding:13px 10px}.code-line{grid-template-columns:23px minmax(0,1fr)}h1{font-size:28px}.supplement-grid{grid-template-columns:1fr;gap:15px}.case-result>div{grid-template-columns:100px 1fr;gap:12px}.case-heading{align-items:flex-start}}
+@media print{header,.actions,dialog{display:none}body{background:white}main{padding:18px;min-height:0}h1{font-size:28px}.subtitle{font-size:14px}.content{grid-template-columns:1fr 1fr;gap:18px}.heading h2{font-size:17px}.heading span{font-size:10px}pre{font-size:11px;line-height:1.4;print-color-adjust:exact}.num{font-size:.7em}.equation{font-size:16px}.example .input,.example button,.identity{font-size:16px}.footnote,.explanation{font-size:10px}}
 </style>
 </head>
 <body>
 <header><strong>SC6104 / RSA SHARED-PRIME AUDIT</strong><span>Implementation detail</span><button id="fullscreen" type="button">Full screen</button></header>
 <main aria-labelledby="slide-title">
-<p class="eyebrow">KEY IMPLEMENTATION</p>
-<h1 id="slide-title">RSA private-key recovery and validation</h1>
-<p class="subtitle">Recover a usable private key from a detected factor, with four validation checks.</p>
+<p class="eyebrow">KEY IMPLEMENTATION</p><h1 id="slide-title">RSA private-key recovery and OAEP decryption</h1><p class="subtitle">Detected factor → validated private key → <strong>recovered plaintext</strong></p>
 <div class="content">
-<section aria-labelledby="core-title"><div class="code-heading"><h2 id="core-title">Recovery core</h2><span>rsa_lab/crypto.py</span></div>
-<pre class="core" aria-label="Selected original key recovery lines"><code><span class="code-line"><span class="num">13</span><span class="code-text">def recover_private_key(n, e, factor):</span></span><span class="code-line"><span class="num">16</span><span class="code-text">    p = factor</span></span><span class="code-line"><span class="num">17</span><span class="code-text">    q = n // p</span></span><span class="code-line"><span class="num">22</span><span class="code-text">    lambda_n = lcm(p - 1, q - 1)</span></span><span class="code-line"><span class="num">25</span><span class="code-text">    d = pow(e, -1, lambda_n)</span></span><span class="code-line"><span class="num">26</span><span class="code-text">    key = RSA.construct((n, e, d, p, q), consistency_check=True)</span></span><span class="code-line"><span class="num">29</span><span class="code-text">    return key</span></span></code></pre>
-<p class="key-equations">q = N / p &nbsp;&nbsp; λ(N) = lcm(p − 1, q − 1)<br>d = e<sup>−1</sup> mod λ(N)</p>
-<p class="code-note">Python's <code>pow(e, -1, lambda_n)</code> computes the modular inverse. PyCryptodome constructs and checks the RSA key.</p>
-</section>
-<section aria-labelledby="validation-title"><div class="code-heading"><h2 id="validation-title">Validation in the same function</h2><span>4 checks</span></div>
-<pre class="validation" aria-label="Original validation conditions, with error messages abbreviated"><code><span class="code-line"><span class="num">14</span><span class="code-text">    if type(factor) is not int or not 1 &lt; factor &lt; n or n % factor:</span></span><span class="code-line"><span class="num">15</span><span class="code-text">        raise ValueError(...)</span></span><span class="code-line"><span class="num">18</span><span class="code-text">    if p == q or not isPrime(p) or not isPrime(q):</span></span><span class="code-line"><span class="num">19</span><span class="code-text">        raise ValueError(...)</span></span><span class="code-line"><span class="num">23</span><span class="code-text">    if gcd(e, lambda_n) != 1:</span></span><span class="code-line"><span class="num">24</span><span class="code-text">        raise ValueError(...)</span></span><span class="code-line"><span class="num">27</span><span class="code-text">    if key.n != p * q or (e * d) % lambda_n != 1:</span></span><span class="code-line"><span class="num">28</span><span class="code-text">        raise ArithmeticError(...)</span></span></code></pre>
-<p class="code-note">Reject improper divisors, repeated or composite factors, a non-invertible exponent, and an inconsistent reconstructed key.</p>
-</section>
+<section aria-labelledby="core-title"><div class="heading"><h2 id="core-title">Private-key reconstruction</h2><span>rsa_lab/crypto.py</span></div><pre class="core" aria-label="Complete recovery logic, with concise error messages"><code><span class="code-line" data-line="13" data-step=""><span class="num">13</span><span class="code-text">def recover_private_key(n, e, factor):</span></span><span class="code-line" data-line="14" data-step=""><span class="num">14</span><span class="code-text">    if type(factor) is not int or not 1 &lt; factor &lt; n or n % factor:</span></span><span class="code-line" data-line="15" data-step=""><span class="num">15</span><span class="code-text">        raise ValueError(&quot;Expected a nontrivial divisor&quot;)</span></span><span class="code-line" data-line="16" data-step=""><span class="num">16</span><span class="code-text">    p = factor</span></span><span class="code-line focus" data-line="17" data-step="1"><span class="num">17</span><span class="code-text">    q = n // p</span></span><span class="code-line" data-line="18" data-step=""><span class="num">18</span><span class="code-text">    if p == q or not isPrime(p) or not isPrime(q):</span></span><span class="code-line" data-line="19" data-step=""><span class="num">19</span><span class="code-text">        raise ValueError(&quot;Expected two distinct primes&quot;)</span></span><span class="code-line focus" data-line="22" data-step="2"><span class="num">22</span><span class="code-text">    lambda_n = lcm(p - 1, q - 1)</span></span><span class="code-line" data-line="23" data-step=""><span class="num">23</span><span class="code-text">    if gcd(e, lambda_n) != 1:</span></span><span class="code-line" data-line="24" data-step=""><span class="num">24</span><span class="code-text">        raise ValueError(&quot;e must be coprime to lambda(n)&quot;)</span></span><span class="code-line focus" data-line="25" data-step="3"><span class="num">25</span><span class="code-text">    d = pow(e, -1, lambda_n)</span></span><span class="code-line" data-line="26" data-step=""><span class="num">26</span><span class="code-text">    key = RSA.construct((n, e, d, p, q), consistency_check=True)</span></span><span class="code-line" data-line="27" data-step=""><span class="num">27</span><span class="code-text">    if key.n != p * q or (e * d) % lambda_n != 1:</span></span><span class="code-line" data-line="28" data-step=""><span class="num">28</span><span class="code-text">        raise ArithmeticError(&quot;Key consistency check failed&quot;)</span></span><span class="code-line" data-line="29" data-step=""><span class="num">29</span><span class="code-text">    return key</span></span></code></pre><p class="equation">q = N / p &nbsp; · &nbsp; λ(N) = lcm(p − 1, q − 1) &nbsp; · &nbsp; d = e<sup>−1</sup> mod λ(N)</p></section>
+<section aria-labelledby="oaep-core-title"><div class="heading"><h2 id="oaep-core-title">OAEP configuration and decryption</h2><span>rsa_lab/crypto.py</span></div><pre class="oaep-core" aria-label="OAEP configuration and complete message decryption logic, with concise error messages"><code><span class="code-line" data-line="32" data-step=""><span class="num">32</span><span class="code-text">def oaep_cipher(key, label=b&quot;&quot;):</span></span><span class="code-line focus" data-line="34" data-step=""><span class="num">34</span><span class="code-text">    return PKCS1_OAEP.new(key, hashAlgo=SHA256,</span></span><span class="code-line focus" data-line="35" data-step=""><span class="num">35</span><span class="code-text">                         mgfunc=lambda seed, size: PKCS1_OAEP.MGF1(seed, size, SHA256), label=label)</span></span><span class="code-gap" aria-hidden="true"></span><span class="code-line" data-line="46" data-step=""><span class="num">46</span><span class="code-text">def decrypt_message(private, row):</span></span><span class="code-line" data-line="47" data-step=""><span class="num">47</span><span class="code-text">    if (row.get(&quot;scheme&quot;), row.get(&quot;hash&quot;), row.get(&quot;mgf&quot;)) != (&quot;RSAES-OAEP&quot;, &quot;SHA-256&quot;, &quot;MGF1-SHA-256&quot;):</span></span><span class="code-line" data-line="48" data-step=""><span class="num">48</span><span class="code-text">        raise ValueError(&quot;Unsupported OAEP parameters&quot;)</span></span><span class="code-line" data-line="49" data-step=""><span class="num">49</span><span class="code-text">    label = base64.b64decode(row[&quot;label_b64&quot;], validate=True)</span></span><span class="code-line" data-line="50" data-step=""><span class="num">50</span><span class="code-text">    ciphertext = base64.b64decode(row[&quot;ciphertext_b64&quot;], validate=True)</span></span><span class="code-line" data-line="51" data-step=""><span class="num">51</span><span class="code-text">    if len(ciphertext) != private.size_in_bytes():</span></span><span class="code-line" data-line="52" data-step=""><span class="num">52</span><span class="code-text">        raise ValueError(&quot;Invalid ciphertext length&quot;)</span></span><span class="code-line focus" data-line="53" data-step=""><span class="num">53</span><span class="code-text">    return oaep_cipher(private, label).decrypt(ciphertext)</span></span></code></pre><p class="equation">Recovered private key + ciphertext → plaintext</p></section>
 </div>
-<section class="example" aria-label="Verified small-integer illustration"><h2>Arithmetic example</h2><span class="math">N = 77, e = 17, p = 7</span><span class="math">q = 11, λ(N) = 30, d = 23</span><span class="math verified">17 × 23 mod 30 = 1</span></section>
-<div class="footer"><p class="footnote">Two excerpts from <code>recover_private_key()</code>, lines 13–29. Error messages are abbreviated in the validation excerpt.<br>The small integers explain the arithmetic. <strong>The recorded 2048-bit experiment recovered 5 distinct keys and verified 6 OAEP messages.</strong></p><div class="actions"><button id="show-source" type="button">Full function</button><button id="show-oaep" type="button">OAEP decryption</button></div></div>
+<section class="example" aria-label="Small-integer recovery example"><h2>Arithmetic example</h2><span class="input">N = 77, e = 17, p = 7</span><button type="button" data-example="1" aria-pressed="false">q = 11</button><button type="button" data-example="2" aria-pressed="false">λ(N) = 30</button><button type="button" data-example="3" aria-pressed="false">d = 23</button><span class="identity">17 × 23 mod 30 = 1</span></section>
+<p class="explanation" id="step-explanation" aria-live="polite">The highlighted recovery statements derive q, λ(N) and d. The returned key is then used by the decryption function.</p>
+<div class="footer"><p class="footnote">RSA/OAEP primitives: PyCryptodome. Supplementary views show record processing and post-recovery verification.<br>Small integers illustrate the arithmetic. The recorded 2048-bit experiment recovered 5 distinct keys and verified 6 OAEP messages.</p><div class="actions"><button id="show-source" type="button">Recovery pipeline</button><button id="show-oaep" type="button">Verification evidence</button></div></div>
 </main>
-<dialog id="source-dialog" aria-labelledby="source-title"><div class="dialog-head"><div><h2 id="source-title">Complete recovery function</h2><p>rsa_lab/crypto.py · recover_private_key() · lines 13–29</p></div><button id="close-source" type="button">Close</button></div><pre><code>def recover_private_key(n, e, factor):
-    if type(factor) is not int or not 1 &lt; factor &lt; n or n % factor:
-        raise ValueError(&quot;Factor must be a nontrivial divisor of n&quot;)
-    p = factor
-    q = n // p
-    if p == q or not isPrime(p) or not isPrime(q):
-        raise ValueError(&quot;n must be a product of two distinct primes&quot;)
-
-    # With both primes known, recover d by modular inversion.
-    lambda_n = lcm(p - 1, q - 1)
-    if gcd(e, lambda_n) != 1:
-        raise ValueError(&quot;Public exponent is not coprime to lambda(n)&quot;)
-    d = pow(e, -1, lambda_n)
-    key = RSA.construct((n, e, d, p, q), consistency_check=True)
-    if key.n != p * q or (e * d) % lambda_n != 1:
-        raise ArithmeticError(&quot;Recovered key failed consistency checks&quot;)
-    return key</code></pre></dialog>
-<dialog id="oaep-dialog" aria-labelledby="oaep-title"><div class="dialog-head"><div><h2 id="oaep-title">From recovered key to plaintext</h2><p>rsa_lab/crypto.py · oaep_cipher() and decrypt_message() · lines 32–35, 46–53</p></div><button id="close-oaep" type="button">Close</button></div><pre><code>def oaep_cipher(key, label=b&quot;&quot;):
-    # Use SHA-256 for both OAEP and MGF1.
-    return PKCS1_OAEP.new(key, hashAlgo=SHA256,
-                         mgfunc=lambda seed, size: PKCS1_OAEP.MGF1(seed, size, SHA256), label=label)
-
-
-def decrypt_message(private, row):
-    if (row.get(&quot;scheme&quot;), row.get(&quot;hash&quot;), row.get(&quot;mgf&quot;)) != (&quot;RSAES-OAEP&quot;, &quot;SHA-256&quot;, &quot;MGF1-SHA-256&quot;):
-        raise ValueError(&quot;Only RSAES-OAEP / SHA-256 / MGF1-SHA-256 is supported&quot;)
-    label = base64.b64decode(row[&quot;label_b64&quot;], validate=True)
-    ciphertext = base64.b64decode(row[&quot;ciphertext_b64&quot;], validate=True)
-    if len(ciphertext) != private.size_in_bytes():
-        raise ValueError(&quot;Ciphertext length does not match the modulus length&quot;)
-    return oaep_cipher(private, label).decrypt(ciphertext)</code></pre><p class="dialog-note">The recovered private key is passed to <code>decrypt_message()</code>. The code checks the declared scheme and ciphertext length, decodes the inputs, and uses PyCryptodome to decrypt with matching SHA-256, MGF1 and label parameters. OAEP decryption provides the plaintext; the separate evaluation compares it with the expected message.</p></dialog>
+<dialog id="source-dialog" aria-labelledby="source-title">
+<div class="dialog-head"><div><h2 id="source-title">Record-level recovery pipeline</h2><p>rsa_lab/crypto.py · recover_messages() · lines 83–96</p></div><button id="close-source" type="button">Close</button></div>
+<p class="dialog-intro">The main slide explains one key and one ciphertext. This caller connects those functions across the collection.</p>
+<p class="boundary"><strong>Attack inputs:</strong> public keys, detected factors and ciphertexts. Original private keys and expected plaintexts are excluded.</p>
+<pre id="pipeline-code"><code>public = by_id[key_id]
+try:
+    cache_key = (public.n, public.e)
+    if cache_key not in cache:
+        cache[cache_key] = recover_private_key(public.n, public.e, from_hex(detected[key_id][&quot;factor&quot;]))
+    private = cache[cache_key]
+except (ValueError, TypeError, KeyError) as error:
+    output.append({**row, &quot;status&quot;: &quot;invalid_factor&quot;, &quot;error&quot;: str(error)})
+    continue
+try:
+    plaintext = decrypt_message(private, cipher)
+except (ValueError, TypeError, KeyError) as error:
+    output.append({**row, &quot;status&quot;: &quot;invalid_ciphertext&quot;, &quot;error&quot;: str(error)})
+    continue</code></pre>
+<div class="supplement-grid"><section><h3>One cached key, multiple records</h3><p>The cache uses <code>(N, e)</code>. Records with the same public key reuse one reconstructed private key, while each record retains its own ciphertext.</p><p class="supplement-result">5 distinct recovered keys → 6 decrypted records</p></section><section><h3>Failures remain explicit</h3><p><code>invalid_factor</code> reports a failed key reconstruction. <code>invalid_ciphertext</code> reports a failed decryption. Each failure is recorded before processing continues.</p><p>Earlier branches require a known record ID and <code>factor_found</code>; otherwise they return <code>unknown_key</code> or <code>not_factorable</code>.</p></section></div>
+<p class="dialog-note">This is an excerpt inside the ciphertext loop. The full function also validates the detected inputs and preserves each record's output.</p>
+</dialog>
+<dialog id="oaep-dialog" aria-labelledby="oaep-title">
+<div class="dialog-head"><div><h2 id="oaep-title">Independent verification and negative checks</h2><p>rsa_lab/evaluation.py · evaluate() · lines 43–47</p></div><button id="close-oaep" type="button">Close</button></div>
+<p class="dialog-intro">Successful key construction or decryption is followed by a separate comparison with the expected message.</p>
+<pre id="comparison-code"><code>if row[&quot;status&quot;] == &quot;decrypted&quot;:
+    if row[&quot;plaintext_b64&quot;] == by_id[row[&quot;id&quot;]][&quot;message_b64&quot;]:
+        verified_ids.append(row[&quot;id&quot;])
+    else:
+        invalid_decryptions.append(row[&quot;id&quot;])</code></pre>
+<p class="dialog-note">The evaluator checks record IDs and duplicates before this excerpt. Base64 comparisons preserve exact message bytes, including non-UTF-8 content.</p>
+<div class="case-heading"><h3>Recorded experiment and controls</h3><span class="recorded-label">Recorded evidence</span></div>
+<div class="case-buttons" aria-label="Select a recorded validation case"><button type="button" data-case="matched" aria-pressed="false">Verified recovery</button><button type="button" data-case="wrong_oaep_label" aria-pressed="false">Wrong OAEP label</button><button type="button" data-case="corrupted_ciphertext" aria-pressed="false">Corrupted ciphertext</button></div>
+<dl class="case-result"><div><dt>Expected</dt><dd id="case-expected"></dd></div><div><dt>Observed status</dt><dd id="case-observed"></dd></div><div><dt>Result</dt><dd id="case-result"></dd></div></dl>
+<p id="case-meaning" class="case-meaning" aria-live="polite"></p>
+<p class="dialog-note">Sources: artifacts/demo/verification.json and artifacts/controls/validation.json. These selections display saved results; they do not execute Python. The live replay on slide 6 compares fresh recovery with archived verified outputs, while the code above belongs to the separate ground-truth evaluation.</p>
+</dialog>
+<script id="validation-data" type="application/json">[{"id": "matched", "label": "Verified recovery", "observed": "decrypted", "expected": "Plaintext equals the expected message", "result": "6 messages verified across 5 distinct moduli", "meaning": "The separate evaluator confirms exact Base64-encoded message bytes after the recovery process finishes.", "passed": true}, {"id": "wrong_oaep_label", "label": "Wrong OAEP label", "observed": "invalid_ciphertext", "expected": "invalid_ciphertext", "result": "Rejected as expected", "meaning": "An incorrect label is rejected in this OAEP control test; no plaintext is accepted.", "passed": true}, {"id": "corrupted_ciphertext", "label": "Corrupted ciphertext", "observed": "invalid_ciphertext", "expected": "invalid_ciphertext", "result": "Rejected as expected", "meaning": "The modified ciphertext is rejected in this control test; failure is retained as an explicit status.", "passed": true}]</script>
 <script>
 const fullscreenButton = document.getElementById('fullscreen');
 fullscreenButton.addEventListener('click', async () => {
   try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
   catch (_) { fullscreenButton.textContent = 'Use browser full screen'; }
 });
-document.addEventListener('fullscreenchange', () => {
-  fullscreenButton.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
-});
-const sourceDialog = document.getElementById('source-dialog');
-document.getElementById('show-source').addEventListener('click', () => sourceDialog.showModal());
-document.getElementById('close-source').addEventListener('click', () => sourceDialog.close());
-const oaepDialog = document.getElementById('oaep-dialog');
-document.getElementById('show-oaep').addEventListener('click', () => oaepDialog.showModal());
-document.getElementById('close-oaep').addEventListener('click', () => oaepDialog.close());
+document.addEventListener('fullscreenchange', () => { fullscreenButton.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; });
+for (const name of ['source', 'oaep']) {
+  const dialog = document.getElementById(name + '-dialog');
+  document.getElementById('show-' + name).addEventListener('click', () => dialog.showModal());
+  document.getElementById('close-' + name).addEventListener('click', () => dialog.close());
+}
+const validationCases = JSON.parse(document.getElementById('validation-data').textContent);
+const caseButtons = [...document.querySelectorAll('[data-case]')];
+function showValidationCase(id) {
+  const item = validationCases.find(value => value.id === id);
+  if (!item) return;
+  caseButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.case === id)));
+  document.getElementById('case-expected').textContent = item.expected;
+  document.getElementById('case-observed').textContent = item.observed;
+  document.getElementById('case-result').textContent = item.result;
+  document.getElementById('case-meaning').textContent = item.meaning;
+}
+caseButtons.forEach(button => button.addEventListener('click', () => showValidationCase(button.dataset.case)));
+showValidationCase('matched');
+const examples = [...document.querySelectorAll('[data-example]')];
+const coreLines = [...document.querySelectorAll('.core .code-line')];
+const descriptions = {
+  1: 'Recover q: p divides N, so 77 // 7 gives the exact other prime, 11.',
+  2: 'Compute λ(N): lcm(7 − 1, 11 − 1) = lcm(6, 10) = 30.',
+  3: 'Recover d: pow(17, -1, 30) = 23, because 17 × 23 mod 30 = 1.'
+};
+examples.forEach(button => button.addEventListener('click', () => {
+  const step = button.dataset.example;
+  examples.forEach(item => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', String(active)); });
+  coreLines.forEach(line => line.classList.toggle('active', line.dataset.step === step));
+  document.getElementById('step-explanation').textContent = descriptions[step];
+}));
 </script>
-</body>
-</html>
+</body></html>

@@ -1,6 +1,6 @@
 # 正式展示与动画
 
-`final.html` 是十页正式展示版。正文、数学说明及按钮为英文，不包含主讲人、计时、演讲提示或讲稿入口。前八页保留原展示；第 9 页为 A 的 Batch GCD 实现，第 10 页为 B 的私钥重建与验证。逐页讲稿、两人分工、八分钟主线和代码页讲述在 `../docs/FINAL_SPEECH.md`。
+`final.html` 是十页正式展示版。正文、数学说明及按钮为英文，不包含主讲人、计时、演讲提示或讲稿入口。前八页保留原展示；第 9 页为 A 的 Batch GCD 实现，第 10 页为 B 的私钥恢复与 OAEP 解密。逐页讲稿、两人分工、八分钟主线和代码页讲述在 `../docs/FINAL_SPEECH.md`。
 
 ## 现场运行 Python
 
@@ -10,7 +10,7 @@ http://127.0.0.1:8765/presentation/final.html
 
 本机也可使用 `..\.venv\Scripts\python.exe -X utf8 scripts/presentation_server.py`。程序只监听本机回环地址。端口被占用时自动尝试后续端口，以启动窗口输出的地址为准；可加 `--port 8766` 指定起始端口。CMD 不打开浏览器时使用 `run_presentation.cmd --no-browser`。
 
-启动信息显示实际演示目录、十页数量及版本号。服务禁用网页和配套资源缓存，即使浏览器带着旧缓存校验信息也会返回当前文件。图标及 Chrome 开发工具的附带请求不会再产生截图中的两条 404。
+启动信息显示实际演示目录、十页数量及版本号。版本号覆盖正文、嵌入代码页及 HTML/CSS/JavaScript 资源，更新代码页也会改变启动地址。服务禁用网页和配套资源缓存，即使浏览器带着旧缓存校验信息也会返回当前文件。图标及 Chrome 开发工具的附带请求不会再产生截图中的两条 404。
 
 第 6 页点击 **Run Python pipeline**，再点 **Run pipeline**。窗口展示真实命令、stdout、输入摘要、逐阶段结果和耗时；**Save run log** 可下载运行记录。执行流程：
 
@@ -22,7 +22,7 @@ http://127.0.0.1:8765/presentation/final.html
 
 这是**现场重算并对照归档**，不是重播日志，也不重新生成密钥、不重跑完整独立真值评估或性能实验。结果写入临时目录，不修改归档，不保存私钥文件。失败会显示错误，不伪装成成功。执行请求不接受任意命令或文件路径，同一时刻只允许一次运行。
 
-本机依赖已经安装，启动器自动复用上一级项目的 `.venv`；其他机器使用 Python 3.10+ 并安装 `requirements.txt`。完整实验可回到上一级课程项目使用 `run_demo.cmd`。普通 `python -m http.server` 不能提供执行接口。
+本机依赖已经安装，启动器依次优先复用展示包、课程仓库或 group 目录下的 `.venv`；其他机器使用 Python 3.10+ 并安装 `requirements.txt`。完整实验可回到上一级课程项目使用 `run_demo.cmd`。普通 `python -m http.server` 不能提供执行接口。
 
 ## 离线与动画
 
@@ -35,7 +35,7 @@ http://127.0.0.1:8765/presentation/final.html
 - Full screen 为整组页面全屏。系统减少动画设置仍受支持。
 - 第 4 页开关用于比较 full-overlap 的回退与 unresolved，右侧正式核验证据不随教学开关变化。
 - 第 9、10 页支持方向键和 PageDown / PageUp 切换总展示。打开代码页的补充窗口时不会误翻页，离开代码页会关闭它的窗口。
-- 第 9 页保留 Full function 与 Arithmetic trace；第 10 页保留 Full function 与 OAEP decryption。
+- 第 9 页保留 Full function 与 Arithmetic trace；第 10 页使用 Recovery pipeline 与 Verification evidence，分别补充调用与缓存逻辑，以及独立核验和两个 OAEP 失败对照的归档结果。弹窗切换不运行 Python。
 
 步骤切换复用图形元素，数字交叉渐变、数据点沿树路径移动；快速切换会取消旧过渡。第 6 页可按阶段直接查看记录结果，并有独立的现场执行窗口。补充窗口包含私钥公式、对照实验、分阶段耗时、弱素数池和共享因子图。
 
@@ -59,4 +59,4 @@ node tests/presentation_live.test.cjs
 ..\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p test_presentation_server.py -v
 ```
 
-网页归档数据由上一级课程项目的 `scripts/export_showcase.py` 生成；更新实验后请同步本目录的归档和展示数据。正式讲稿是 `docs/FINAL_SPEECH.md`。代码页的独立原稿位于 `review_slides/`，嵌入副本位于 `presentation/embed/`，通过 `implementation-embed.css/js` 接入总导航；修改原稿时请同步嵌入副本。B 页正文保留原逻辑，完整源码窗口中的错误信息译为英文。
+网页归档数据由上一级课程项目的 `scripts/export_showcase.py` 生成；更新实验后请同步本目录的归档和展示数据。正式讲稿是 `docs/FINAL_SPEECH.md`。代码页的独立原稿位于 `review_slides/`，嵌入副本位于 `presentation/embed/`，通过 `implementation-embed.css/js` 接入总导航；修改原稿时请同步嵌入副本。B 页主视图按私钥恢复 → OAEP 解密展示 26 行逻辑；补充窗口展示调用层和独立核验。B 页英文练习稿位于 `docs/B_KEY_IMPLEMENTATION_REHEARSAL_EN.md`。

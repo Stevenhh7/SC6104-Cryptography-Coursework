@@ -75,7 +75,7 @@ const deckMarkup=fs.readFileSync(path.join(root,'presentation/final.html'),'utf8
 const slideTitles=[...deckMarkup.matchAll(/<section class="slide[^\"]*" data-title="([^\"]+)"/g)].map(match=>match[1]);
 assert.equal(slideTitles.length,10);
 assert.match(slideTitles[8],/^A .*Batch GCD implementation$/);
-assert.match(slideTitles[9],/^B .*RSA private-key recovery$/);
+assert.match(slideTitles[9],/^B .*RSA recovery and OAEP$/);
 const slides=slideTitles.map((title,index)=>{
   const slide=node();slide.dataset.title=title;
   const frame=(index>=1&&index<=3)||index>=8?{...node(),contentWindow:{messages:[],postMessage(data){this.messages.push(data);}}}:null;
