@@ -172,15 +172,23 @@ gcd(N_i, r_i / N_i) = gcd(N_i, Q_i)
 
 你需要理解并能推导：`P=N_i Q_i`，所以 `P mod N_i² = N_i(Q_i mod N_i)`；除以 `N_i` 后再求 GCD 与 `gcd(N_i,Q_i)` 等价。`index // 2` 对应乘积树的两子节点父索引，奇数末节点也沿用这一索引。`check()` 只检查执行期限。去重在这段前面完成，因子验证与全重叠回退在其他位置完成；不能说这 21 行就是整个扫描器。详细中文解释在 `review_slides/A_CODE_EXPLANATION.md`。
 
-## 第 10 页 · B — RSA private-key recovery
+## 第 10 页 · B — RSA recovery and OAEP decryption
 
-操作：先指左栏 `q`、`lambda_n`、`d`，再概括右栏四项检查。**Full function** 显示完整逻辑，错误信息译为英文；**OAEP decryption** 说明恢复的私钥如何用于解密。
+操作：先指左栏第 17、22、25 行说明 q、lambda 和 d；四项检查也在左栏。再指右栏第 34–35 行的 OAEP 参数，以及第 53 行的解密调用。主讲约 40–50 秒，两个补充弹窗留给问答。
 
-> Once A finds a proper factor, my recovery code calculates the other prime, the least common multiple, and the modular inverse that gives the private exponent. PyCryptodome constructs the RSA key and checks its consistency.
->
-> The four conditions reject invalid divisors, repeated or composite factors, a non-invertible exponent, and inconsistent results. The recovered key then performs ordinary OAEP decryption with matching SHA-256, MGF1 and label settings. Our recorded experiment verifies six messages from five distinct keys. We recover compromised keys; we do not break OAEP itself.
+> The left function rebuilds an RSA private key from the factor found by our detector. The highlighted lines recover q, calculate lambda, and obtain d by modular inversion. Four checks reject invalid inputs and inconsistent results. PyCryptodome constructs the key. The right functions use matching SHA-256, MGF1 and label settings for OAEP decryption. Finally, a separate evaluation compares the recovered plaintext with the expected message.
 
-小整数手算：`77/7=11`，`lcm(6,10)=30`，`17×23 mod 30=1`，因此 `d=23`。这个例子只说明 RSA 算术，不是可用来做 OAEP 的 2048-bit 密钥。真实解密已在第 6 页现场流程中展示；明文是否正确由攻击后的独立核验确认，不能仅凭 `RSA.construct()` 成功就宣称解密正确。
+小整数手算：`77 // 7 = 11`，`lcm(6, 10) = 30`，`17 × 23 mod 30 = 1`，因此 `d = 23`。页面上三个算例按钮对应左栏三个算术步骤，只用于解释数学；真实实验使用 2048-bit 模数。
+
+**Recovery pipeline** 补充调用关系、`(N, e)` 密钥缓存及失败状态，可回答“左右两部分怎么连接”和“为什么五把密钥能解密六条消息”。
+
+> These calls connect key recovery to message decryption. We cache the recovered key by N and e, so duplicate public-key records can reuse the same key while retaining separate ciphertexts. Reconstruction and decryption failures are recorded separately.
+
+**Verification evidence** 补充独立明文比较，以及成功恢复、错误 OAEP label、损坏密文的归档结果。这里切换的是保存的证据，不执行 Python；现场重算仍在第 6 页。
+
+> Decryption is followed by an independent comparison with the expected message bytes. The recorded experiment verified six messages from five distinct keys. The wrong-label and corrupted-ciphertext controls were both rejected. These buttons show saved evidence; the live Python replay is on slide six.
+
+详细英文练习稿在 `docs/B_KEY_IMPLEMENTATION_REHEARSAL_EN.md`。密钥构造、OAEP 解密和明文独立核验是不同检查；不能仅凭 `RSA.construct()` 成功就宣称明文正确。
 
 ## 两分钟问答：两人都要会的答案
 
@@ -199,7 +207,7 @@ gcd(N_i, r_i / N_i) = gcd(N_i, Q_i)
 | OAEP 被破解了吗？ | 没有。私钥恢复后使用正常 OAEP 解密。错误 label 和损坏密文应被拒绝。 |
 | 没找到共享因子是否说明安全？ | 只对当前输入集合和这种弱点作结论；孤立目标对照说明覆盖限制。 |
 | 3000 个模数快了多少倍？ | pairwise 三次均在 45 秒终止，没有完整扫描时间，不能给出实测速比。 |
-| 哪些是自己实现的？ | A 实现树、去重、检测、回退、状态和计时；B 实现数据及实验流程、恢复连接、独立核验。GMP 提供大整数原语，PyCryptodome 提供 RSA/OAEP 基础操作。 |
+| 两部分代码如何分工与连接？ | A 部分负责树、去重、检测、回退、状态和计时；B 部分负责数据及实验流程、恢复连接、独立核验。GMP 提供大整数原语，PyCryptodome 提供 RSA/OAEP 基础操作。 |
 
 ## 实现定位
 
