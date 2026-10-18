@@ -63,7 +63,7 @@
       eyebrow: 'A · Product and squared-modulus remainder trees',
       title: 'Multiply up. Reduce down. Find factors.',
       subtitle: 'Reuse intermediate work instead of comparing every pair of public moduli.',
-      sceneLabel: 'Batch GCD · exact teaching example',
+      sceneLabel: 'Batch GCD',
       source: 'trees.py · product_tree() / squared_remainders()',
       steps: [
         {title: 'Begin with unique moduli', copy: 'For m distinct moduli, the baseline needs m(m − 1)/2 pairwise GCD computations.',
